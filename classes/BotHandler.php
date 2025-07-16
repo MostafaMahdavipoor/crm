@@ -90,7 +90,7 @@ class BotHandler
             error_log("Callback query missing required data.");
             return;
         }
-        if (str_starts_with($callbackData, 'customer_creation')) {
+        if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
 
             $text = "نام مشتری جدید را وارد کنید";
 
@@ -109,7 +109,7 @@ class BotHandler
                 'message_id' => $messageId,
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
-        }elseif(str_starts_with($callbackData, 'back')){
+        }elseif(str_starts_with($callbackData, 'cancel')){
             $this->showMainMenu($this->chatId,$messageId);
         }
     }
@@ -136,7 +136,8 @@ class BotHandler
             $text = "شماره مشتری جدید را وارد کنید";
 
             $keyboard = [
-                [['text' => '📝برگشت', 'callback_data' => 'back']],
+                [['text' => '📝کنسل', 'callback_data' => 'cancel']],
+                [['text' => '📝برگشت', 'callback_data' => 'back_name']],
             ];
             $reply_markup = [
                 'inline_keyboard' => $keyboard
@@ -149,7 +150,6 @@ class BotHandler
                 'message_id' => $messageId,
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
-
         }
     }
 
