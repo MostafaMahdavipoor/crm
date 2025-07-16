@@ -29,7 +29,7 @@ if (isset($update['inline_query'])) {
     $text = $message['text'] ?? '';
     $messageId = $message['message_id'] ?? null;
 
-    $bot = new BotHandler($chatId, $text, $messageId, $message);
+    $bot = new BotHandler($chatId, $text, $messageId, $message, null);
 
     if (isset($message['successful_payment'])) {
         $bot->handleSuccessfulPayment($update);
@@ -40,9 +40,7 @@ if (isset($update['inline_query'])) {
     $callbackQuery = $update['callback_query'];
     $chatId = $callbackQuery['message']['chat']['id'];
     $messageId = $callbackQuery['message']['message_id'] ?? null;
-    $bot = new BotHandler($chatId, '', $messageId, $callbackQuery['message']);
+    $callbackId = $update['callback_query']['id'];
+    $bot = new BotHandler($chatId, '', $messageId, $callbackQuery['message'], $callbackId);
     $bot->handleCallbackQuery($callbackQuery);
-}  elseif (isset($update['pre_checkout_query'])) {
-    $bot = new BotHandler(null, null, null, null);
-    $bot->handlePreCheckoutQuery($update);
 }
