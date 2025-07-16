@@ -127,7 +127,7 @@ class BotHandler
             $this->showMainMenu($this->chatId);
         }
 
-        if ($state=== 'witting_customer_creation_name') {
+        if ($state == 'witting_customer_creation_name') {
             $nameCustomer=$this->text;
             $messageId=$this->fileHandler->getMessageIds($this->chatId);
             $this->deleteMessageWithDelay();
