@@ -272,7 +272,8 @@ class Database
         INSERT INTO customers (admin_chat_id, name, phone, email, status, note, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
     ");
-        $stmt->bind_param("sssss", $adminChatId, $name, $phone, $email, $status, $note);
+        // اصلاح bind_param برای تطابق با تعداد پارامترها
+        $stmt->bind_param("ssssss", $adminChatId, $name, $phone, $email, $status, $note);
         if ($stmt->execute()) {
             $stmt->close();
             return true; // مشتری جدید با موفقیت اضافه شد
@@ -281,6 +282,7 @@ class Database
             return false; // خطا در افزودن مشتری
         }
     }
+
 
 }
 ?>
