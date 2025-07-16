@@ -167,7 +167,6 @@ class BotHandler
     }
 
 
-
     private function getStatusText($status): string
     {
         switch ($status) {
@@ -256,40 +255,35 @@ class BotHandler
             $messageId = $this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
             $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
+            if ($state == 'witting_customer_creation_email') {
+                $emailCustomer = $this->text;
+                $messageId = $this->fileHandler->getMessageId($this->chatId);
+                $this->deleteMessageWithDelay();
+                $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
 
-            // دریافت دیگر داده‌های مشتری از فایل
-            $name = $this->fileHandler->getNameCustomer($this->chatId);
-            $phone = $this->fileHandler->getPhoneCustomer($this->chatId);
-            $status = $this->fileHandler->getStatusCustomer($this->chatId);
-            $note = $this->fileHandler->getNoteCustomer($this->chatId);
+                $text = "لطفاً وضعیت مشتری را انتخاب کنید:";
 
-            // استفاده از متد insertCustomer برای ذخیره داده‌ها
-            $result = $this->db->insertCustomer($this->chatId, $name, $phone, $emailCustomer, $status, $note);
+                $keyboard = [
+                    [['text' => '❄️ سرد', 'callback_data' => 'cold']],
+                    [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
+                    [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
+                    [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
+                    [['text' => '🔙 برگشت', 'callback_data' => 'back_email']],
+                ];
+                $reply_markup = [
+                    'inline_keyboard' => $keyboard
+                ];
 
-            if ($result) {
-                $text = "ثبت مشتری با موفقیت انجام شد!";
-            } else {
-                $text = "این شماره قبلاً ثبت شده است.";
+                $this->sendRequest('editMessageText', [
+                    'chat_id' => $this->chatId,
+                    'text' => $text,
+                    'message_id' => $messageId,
+                    'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+                ]);
             }
 
-            // نمایش پیام تایید
-            $keyboard = [
-                [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
-            ];
-            $reply_markup = [
-                'inline_keyboard' => $keyboard
-            ];
-
-            $this->sendRequest('sendMessage', [
-                'chat_id' => $this->chatId,
-                'text' => $text,
-                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
-            ]);
         }
     }
-
-
-
 
 
     private function showMainMenu($chatId, $messageId = null): void
@@ -312,7 +306,7 @@ class BotHandler
         ];
 
         if ($messageId) {
-           $this->sendRequest('editMessageText', [
+            $this->sendRequest('editMessageText', [
                 'chat_id' => $chatId,
                 'message_id' => $messageId,
                 'text' => $text,
@@ -326,7 +320,6 @@ class BotHandler
             ]);
         }
     }
-
 
 
     public function sendRequest($method, $data)
