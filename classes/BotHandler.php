@@ -260,11 +260,11 @@ class BotHandler
             // دریافت دیگر داده‌های مشتری از فایل
             $name = $this->fileHandler->getNameCustomer($this->chatId);
             $phone = $this->fileHandler->getPhoneCustomer($this->chatId);
-         //   $status = $this->fileHandler->getStatusCustomer($this->chatId);
+            $status = $this->fileHandler->getStatusCustomer($this->chatId);
             $note = $this->fileHandler->getNoteCustomer($this->chatId);
 
             // استفاده از متد insertCustomer برای ذخیره داده‌ها
-            $result = $this->db->insertCustomer($this->chatId, $name, $phone, $emailCustomer, $note);
+            $result = $this->db->insertCustomer($this->chatId, $name, $phone, $emailCustomer, $status, $note);
 
             if ($result) {
                 $text = "ثبت مشتری با موفقیت انجام شد!";
@@ -287,6 +287,7 @@ class BotHandler
             ]);
         }
     }
+
 
 
 
