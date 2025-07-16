@@ -78,27 +78,21 @@ class BotHandler
         $chatId = $callbackQuery["message"]["chat"]["id"] ?? null;
         $callbackQueryId = $callbackQuery["id"] ?? null;
         $messageId = $callbackQuery["message"]["message_id"] ?? null;
-        $currentKeyboard = $callbackQuery["message"]["reply_markup"]["inline_keyboard"] ?? [];
-        $userLanguage = $this->db->getUserLanguage($this->chatId);
-        $user = $this->message['from'] ?? $this->callbackQuery['from'] ?? null;
-        if ($user !== null) {
-            $this->db->saveUser($user);
-        } else {
-            error_log("❌ Cannot save user: 'from' is missing in both message and callbackQuery.");
-        }
+
         if (!$callbackData || !$chatId || !$callbackQueryId || !$messageId) {
-            error_log("Callback query missing required data.");
+            error_log("اطلاعات مورد نیاز در کالبک وجود ندارد.");
             return;
         }
-        if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
 
-            $text = "نام مشتری جدید را وارد کنید";
+        if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
+            $text = "لطفاً نام کامل مشتری را وارد کنید:";
 
             $keyboard = [
-                [['text' => '📝برگشت', 'callback_data' => 'back']],
-              ];
-            $this->fileHandler->saveMessageId($chatId,$messageId);
-            $this->fileHandler->saveState($chatId,"witting_customer_creation_name");
+                [['text' => '📝 برگشت', 'callback_data' => 'back']],
+            ];
+            $this->fileHandler->saveMessageId($chatId, $messageId);
+            $this->fileHandler->saveState($chatId, "witting_customer_creation_name");
+
             $reply_markup = [
                 'inline_keyboard' => $keyboard
             ];
@@ -109,42 +103,60 @@ class BotHandler
                 'message_id' => $messageId,
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
-        }elseif(str_starts_with($callbackData, 'cancel')){
-            $this->showMainMenu($this->chatId,$messageId);
-        }
-    }
-
-    public function handleRequest(): void
-    {
-        if (isset($this->message["from"])) {
-            $this->db->saveUser($this->message["from"]);
-        } else {
-            error_log("BotHandler::handleRequest: 'from' field missing for non-start message. Update type might not be a user message.");
-        }
-        $state = $this->fileHandler->getState($this->chatId);
-
-        if ($this->text === '/start') {
-            $this->showMainMenu($this->chatId);
-        }
-
-        if ($state == 'witting_customer_creation_name') {
-            $nameCustomer=$this->text;
-            $messageId=$this->fileHandler->getMessageId($this->chatId);
-            $this->deleteMessageWithDelay();
-            $this->fileHandler->saveNameCustomer($this->chatId,$nameCustomer);
-            $this->fileHandler->saveState($this->chatId,"witting_customer_creation_number");
-            $text = "شماره مشتری جدید را وارد کنید";
+        } elseif (str_starts_with($callbackData, 'cancel')) {
+            $this->showMainMenu($this->chatId, $messageId);
+        } elseif (str_starts_with($callbackData, 'back_number')) {
+            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
+            $text = "لطفاً شماره مشتری جدید را وارد کنید:";
 
             $keyboard = [
-                [['text' => '📝کنسل', 'callback_data' => 'cancel']],
-                [['text' => '📝برگشت', 'callback_data' => 'back_name']],
+                [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
+                [['text' => '📝 برگشت', 'callback_data' => 'back_name']],
             ];
             $reply_markup = [
                 'inline_keyboard' => $keyboard
             ];
 
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+            ]);
+        } elseif (str_starts_with($callbackData, 'cold') || str_starts_with($callbackData, 'in_progress') || str_starts_with($callbackData, 'active_customer')) {
+            $statusCustomer = $callbackData;
+            $this->fileHandler->saveStatusCustomer($this->chatId, $statusCustomer);
 
-             $this->sendRequest('editMessageText', [
+            $text = "وضعیت مشتری با موفقیت ذخیره شد: " . $this->getStatusText($statusCustomer);
+
+            $keyboard = [
+                [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
+            ];
+
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+            ]);
+        } elseif (str_starts_with($callbackData, 'skip_email')) {
+            // اگر کاربر مرحله ایمیل را رد کرده باشد
+            $this->fileHandler->saveState($this->chatId, "completed");  // به مرحله تکمیل منتقل می‌شود
+            $text = "ثبت مشتری با موفقیت انجام شد!";
+
+            $keyboard = [
+                [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
+            ];
+
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
                 'chat_id' => $this->chatId,
                 'text' => $text,
                 'message_id' => $messageId,
@@ -152,6 +164,126 @@ class BotHandler
             ]);
         }
     }
+
+
+    private function getStatusText($status): string
+    {
+        switch ($status) {
+            case 'cold':
+                return 'سرد';
+            case 'in_progress':
+                return 'در حال پیگیری';
+            case 'active_customer':
+                return 'مشتری بالفعل';
+            default:
+                return 'وضعیت نامشخص';
+        }
+    }
+
+
+    public function handleRequest(): void
+    {
+        if (isset($this->message["from"])) {
+            $this->db->saveUser($this->message["from"]);
+        } else {
+            error_log("BotHandler::handleRequest: 'from' field missing.");
+        }
+
+        $state = $this->fileHandler->getState($this->chatId);
+
+        if ($this->text === '/start') {
+            $this->showMainMenu($this->chatId);
+        }
+
+        if ($state == 'witting_customer_creation_name') {
+            $nameCustomer = $this->text;
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
+            $this->fileHandler->saveNameCustomer($this->chatId, $nameCustomer);
+            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
+            $text = "لطفاً شماره مشتری جدید را وارد کنید:";
+
+            $keyboard = [
+                [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
+                [['text' => '📝 برگشت', 'callback_data' => 'back_name']],
+            ];
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+            ]);
+        }
+
+        if ($state == 'witting_customer_creation_number') {
+            $numberCustomer = $this->text;
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
+            $this->fileHandler->savenumberCustomer($this->chatId, $numberCustomer);
+
+            $text = "لطفاً ایمیل مشتری را وارد کنید:";
+
+            $keyboard = [
+                [['text' => '📝 رد کردن مرحله ایمیل', 'callback_data' => 'skip_email']],
+                [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
+                [['text' => '📝 برگشت', 'callback_data' => 'back_number']],
+            ];
+
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+            ]);
+        }
+
+        if ($state == 'witting_customer_creation_email') {
+            $emailCustomer = $this->text;  // ذخیره ایمیل مشتری
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
+            $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
+
+            // دریافت دیگر داده‌های مشتری از فایل
+            $name = $this->fileHandler->getNameCustomer($this->chatId);
+            $phone = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $status = $this->fileHandler->getStatusCustomer($this->chatId);
+            $note = $this->fileHandler->getNoteCustomer($this->chatId);
+
+            // استفاده از متد insertCustomer برای ذخیره داده‌ها
+            $result = $this->db->insertCustomer($this->chatId, $name, $phone, $emailCustomer, $status, $note);
+
+            if ($result) {
+                $text = "ثبت مشتری با موفقیت انجام شد!";
+            } else {
+                $text = "این شماره قبلاً ثبت شده است.";
+            }
+
+            // نمایش پیام تایید
+            $keyboard = [
+                [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
+            ];
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+            ]);
+        }
+    }
+
+
 
     private function showMainMenu($chatId, $messageId = null): void
     {

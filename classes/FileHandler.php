@@ -86,11 +86,81 @@ class FileHandler
         return $data[$chatId]['message_id'] ?? null;
     }
 
-    public function saveNameCustomer($chatId,$nameCustomer)
+    public function saveNameCustomer($chatId, $nameCustomer)
     {
         $data = $this->getAllData();
         $data[$chatId]['name'] = $nameCustomer;
         $this->saveAllData($data);
     }
-}
 
+    public function getNameCustomer($chatId)
+    {
+        $data = $this->getAllData();
+        return $data[$chatId]['name'] ?? null;
+    }
+
+    public function savePhoneCustomer($chatId, $phoneCustomer)
+    {
+        $data = $this->getAllData();
+        $data[$chatId]['phone'] = $phoneCustomer;
+        $this->saveAllData($data);
+    }
+
+    public function getPhoneCustomer($chatId)
+    {
+        $data = $this->getAllData();
+        return $data[$chatId]['phone'] ?? null;
+    }
+
+    public function saveStatusCustomer($chatId, $statusCustomer)
+    {
+        $data = $this->getAllData();
+        $data[$chatId]['status'] = $statusCustomer;
+        $this->saveAllData($data);
+    }
+
+    public function getStatusCustomer($chatId)
+    {
+        $data = $this->getAllData();
+        return $data[$chatId]['status'] ?? null;
+    }
+
+    public function savenumberCustomer($chatId, $numberCustomer)
+    {
+        $data = $this->getAllData();
+        $data[$chatId]['number'] = $numberCustomer; // ذخیره شماره مشتری
+        $this->saveAllData($data);
+    }
+
+    public function getnumberCustomer($chatId)
+    {
+        $data = $this->getAllData();
+        return $data[$chatId]['number'] ?? null;
+    }
+
+    public function saveNoteCustomer($chatId, $noteCustomer)
+    {
+        $data = $this->getAllData();
+        $data[$chatId]['note'] = $noteCustomer;
+        $this->saveAllData($data);
+    }
+
+    public function getNoteCustomer($chatId)
+    {
+        $data = $this->getAllData();
+        return $data[$chatId]['note'] ?? null;
+    }
+
+    public function saveEmailCustomer($chatId, $emailCustomer)
+    {
+        $data = $this->getAllData();
+        $data[$chatId]['email'] = $emailCustomer;
+        $this->saveAllData($data);
+    }
+
+    public function getEmailCustomer($chatId)
+    {
+        $data = $this->getAllData();
+        return $data[$chatId]['email'] ?? null;
+    }
+}
