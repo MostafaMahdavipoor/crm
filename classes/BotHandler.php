@@ -91,10 +91,25 @@ class BotHandler
             return;
         }
         if (str_starts_with($callbackData, 'customer_creation')) {
-            $this->sendRequest('sendMessage', [
+
+            $text = "نام مشتری جدید را وارد کنید";
+
+            $keyboard = [
+                [['text' => '📝برگشت', 'callback_data' => 'back']],
+              ];
+
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
                 'chat_id' => $chatId,
-                'text' => "سلام",
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
+        }elseif(str_starts_with($callbackData, 'back')){
+            $this->showMainMenu($this->chatId);
         }
     }
 
