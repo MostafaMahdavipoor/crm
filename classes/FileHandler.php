@@ -85,5 +85,12 @@ class FileHandler
         $data = $this->getAllData();
         return $data[$chatId]['message_id'] ?? null;
     }
+
+    public function saveNameCustomer($chatId,$nameCustomer)
+    {
+        $data = $this->getAllData();
+        $data[$chatId]['name'] = $nameCustomer;
+        $this->saveAllData($data);
+    }
 }
 
