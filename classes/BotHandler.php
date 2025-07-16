@@ -109,7 +109,7 @@ class BotHandler
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
         }elseif(str_starts_with($callbackData, 'back')){
-            $this->showMainMenu($this->chatId);
+            $this->showMainMenu($this->chatId,$messageId);
         }
     }
 
@@ -127,7 +127,7 @@ class BotHandler
         }
     }
 
-    private function showMainMenu($chatId)
+    private function showMainMenu($chatId, $messageId = null): void
     {
         $text = "👋 به سیستم مدیریت مشتری خوش اومدی!\nاز منوی زیر یکی از گزینه‌ها رو انتخاب کن:";
 
@@ -146,12 +146,22 @@ class BotHandler
             'inline_keyboard' => $keyboard
         ];
 
-        $this->sendRequest('sendMessage', [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
-        ]);
+        if ($messageId) {
+           $this->sendRequest('editMessageText', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+            ]);
+        } else {
+            $this->sendRequest('sendMessage', [
+                'chat_id' => $chatId,
+                'text' => $text,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+            ]);
+        }
     }
+
 
 
     public function sendRequest($method, $data)
