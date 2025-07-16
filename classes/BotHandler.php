@@ -142,7 +142,9 @@ class BotHandler
 
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
+                [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
             ];
+
 
             $reply_markup = [
                 'inline_keyboard' => $keyboard
@@ -160,7 +162,9 @@ class BotHandler
 
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
+                [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
             ];
+
 
             $reply_markup = [
                 'inline_keyboard' => $keyboard
