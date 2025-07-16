@@ -124,11 +124,21 @@ class BotHandler
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
         } elseif (str_starts_with($callbackData, 'cold') || str_starts_with($callbackData, 'in_progress') || str_starts_with($callbackData, 'active_customer')) {
-            // ذخیره وضعیت مشتری
             $statusCustomer = $callbackData;
             $this->fileHandler->saveStatusCustomer($this->chatId, $statusCustomer);
 
-            $text = "وضعیت مشتری با موفقیت ذخیره شد: " . $this->getStatusText($statusCustomer);
+            $name = $this->fileHandler->getNameCustomer($this->chatId);
+            $phone = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $email = $this->fileHandler->getEmailCustomer($this->chatId);
+            $note = $this->fileHandler->getNoteCustomer($this->chatId);
+
+            $result = $this->db->insertCustomer($this->chatId, $name, $phone, $email, $statusCustomer, $note);
+
+            if ($result) {
+                $text = "ثبت مشتری با موفقیت انجام شد!";
+            } else {
+                $text = "این شماره قبلاً ثبت شده است.";
+            }
 
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
@@ -144,7 +154,8 @@ class BotHandler
                 'message_id' => $messageId,
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
-        } elseif (str_starts_with($callbackData, 'skip_email')) {
+        }
+        elseif (str_starts_with($callbackData, 'skip_email')) {
             // اگر کاربر مرحله ایمیل را رد کرده باشد
             $this->fileHandler->saveState($this->chatId, "completed");  // به مرحله تکمیل منتقل می‌شود
             $text = "ثبت مشتری با موفقیت انجام شد!";
