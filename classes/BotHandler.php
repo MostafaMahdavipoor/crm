@@ -129,7 +129,7 @@ class BotHandler
 
         if ($state == 'witting_customer_creation_name') {
             $nameCustomer=$this->text;
-            $messageId=$this->fileHandler->getMessageIds($this->chatId);
+            $messageId=$this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
             $this->fileHandler->saveNameCustomer($this->chatId,$nameCustomer);
             $this->fileHandler->saveState($this->chatId,"witting_customer_creation_number");
@@ -143,7 +143,7 @@ class BotHandler
             ];
 
 
-            $this->sendRequest('editMessageText', [
+             $this->sendRequest('editMessageText', [
                 'chat_id' => $this->chatId,
                 'text' => $text,
                 'message_id' => $messageId,
