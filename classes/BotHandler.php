@@ -142,11 +142,12 @@ class BotHandler
                 'inline_keyboard' => $keyboard
             ];
 
+
             $this->sendRequest('editMessageText', [
                 'chat_id' => $this->chatId,
                 'text' => $text,
-               'message_id' => $messageId,
-               'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
 
         }
