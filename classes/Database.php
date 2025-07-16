@@ -255,7 +255,7 @@ class Database
         return $stmt->get_result()->fetch_assoc();
     }
 
-    public function insertCustomer($adminChatId, $name, $phone, $email, $status, $note = null)
+    public function insertCustomer($adminChatId, $name, $phone, $email, $status= null, $note = null)
     {
         $stmt = $this->mysqli->prepare("SELECT * FROM customers WHERE phone = ? LIMIT 1");
         $stmt->bind_param("s", $phone);
