@@ -5,7 +5,6 @@ namespace Bot;
 use Config\AppConfig;
 use Payment\ZarinpalPaymentHandler;
 
-require_once __DIR__ . "/../config/jdf.php";
 
 class BotHandler
 {
@@ -91,6 +90,14 @@ class BotHandler
             error_log("Callback query missing required data.");
             return;
         }
+        if (str_starts_with($callbackData, 'start_form:')) {
+            $formKey = explode(':', $callbackData)[1];
+            $formsConfig = require __DIR__ . '/../classes/Forms.php';
+            $stateManager = new \Bot\StateManager();
+            $formManager = new \Bot\FormManager($this, $stateManager, $formsConfig);
+            $formManager->start($chatId, $formKey);
+            return;
+        }
     }
 
     public function handleRequest(): void
@@ -101,7 +108,38 @@ class BotHandler
             error_log("BotHandler::handleRequest: 'from' field missing for non-start message. Update type might not be a user message.");
         }
         $state = $this->fileHandler->getState($this->chatId);
+
+        if ($this->text === '/start') {
+            $this->showMainMenu($this->chatId);
+        }
     }
+
+    private function showMainMenu($chatId)
+    {
+        $text = "👋 به سیستم مدیریت مشتری خوش اومدی!\nاز منوی زیر یکی از گزینه‌ها رو انتخاب کن:";
+
+        $keyboard = [
+            [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
+            [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
+            [['text' => '💬 یادداشت پیگیری', 'callback_data' => 'add_followup_note']],
+            [['text' => '📞 ثبت تماس / جلسه', 'callback_data' => 'log_interaction']],
+            [['text' => '🔔 یادآور پیگیری', 'callback_data' => 'set_reminder']],
+            [['text' => '📊 گزارش عملکرد', 'callback_data' => 'show_report']],
+            [['text' => '⚙️ تنظیمات', 'callback_data' => 'settings_menu']],
+            [['text' => '⚙️ تستت', 'callback_data' => 'settings_menu']],
+        ];
+
+        $reply_markup = [
+            'inline_keyboard' => $keyboard
+        ];
+
+        $this->sendRequest('sendMessage', [
+            'chat_id' => $chatId,
+            'text' => $text,
+            'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+        ]);
+    }
+
 
     public function sendRequest($method, $data)
     {

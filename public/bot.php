@@ -4,7 +4,7 @@ require __DIR__ . '/vendor/autoload.php';
 
 use Config\AppConfig;
 use Bot\BotHandler;
-use Bot\InlineQueryHandler;
+
 use Payment\ZarinpalPaymentHandler;
 
 $config = AppConfig::getConfig();
