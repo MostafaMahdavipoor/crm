@@ -124,6 +124,7 @@ class BotHandler
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
         } elseif (str_starts_with($callbackData, 'cold') || str_starts_with($callbackData, 'in_progress') || str_starts_with($callbackData, 'active_customer')) {
+            // ذخیره وضعیت مشتری
             $statusCustomer = $callbackData;
             $this->fileHandler->saveStatusCustomer($this->chatId, $statusCustomer);
 
@@ -166,6 +167,7 @@ class BotHandler
     }
 
 
+
     private function getStatusText($status): string
     {
         switch ($status) {
@@ -183,12 +185,6 @@ class BotHandler
 
     public function handleRequest(): void
     {
-        if (isset($this->message["from"])) {
-            $this->db->saveUser($this->message["from"]);
-        } else {
-            error_log("BotHandler::handleRequest: 'from' field missing.");
-        }
-
         $state = $this->fileHandler->getState($this->chatId);
 
         if ($this->text === '/start') {
@@ -196,7 +192,7 @@ class BotHandler
         }
 
         if ($state == 'witting_customer_creation_name') {
-            $nameCustomer = $this->text;
+            $nameCustomer = $this->text;  // ذخیره نام مشتری
             $messageId = $this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
             $this->fileHandler->saveNameCustomer($this->chatId, $nameCustomer);
@@ -221,9 +217,17 @@ class BotHandler
 
         if ($state == 'witting_customer_creation_number') {
             $numberCustomer = $this->text;
+            if (empty($numberCustomer)) {
+                $this->sendRequest('sendMessage', [
+                    'chat_id' => $this->chatId,
+                    'text' => "❌ لطفاً شماره تلفن را وارد کنید.",
+                ]);
+                return;
+            }
+
             $messageId = $this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
-            $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
+            $this->fileHandler->savenumberCustomer($this->chatId, $numberCustomer);
 
             $text = "لطفاً ایمیل مشتری را وارد کنید:";
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
@@ -247,6 +251,7 @@ class BotHandler
         }
 
         if ($state == 'witting_customer_creation_email') {
+            // ذخیره ایمیل مشتری در صورت وارد کردن
             $emailCustomer = $this->text;
             $messageId = $this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
@@ -278,11 +283,11 @@ class BotHandler
             $this->sendRequest('sendMessage', [
                 'chat_id' => $this->chatId,
                 'text' => $text,
-               // 'message_id' => $messageId,
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
         }
     }
+
 
 
 
