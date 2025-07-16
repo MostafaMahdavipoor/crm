@@ -97,6 +97,7 @@ class BotHandler
             $keyboard = [
                 [['text' => '📝برگشت', 'callback_data' => 'back']],
               ];
+            $this->fileHandler->saveMessageId($chatId,$messageId);
             $this->fileHandler->saveState($chatId,"witting_customer_creation_name");
             $reply_markup = [
                 'inline_keyboard' => $keyboard
@@ -128,6 +129,8 @@ class BotHandler
 
         if ($state=== 'witting_customer_creation_name') {
             $nameCustomer=$this->text;
+            $messageId=$this->fileHandler->getMessageIds($this->chatId);
+            $this->deleteMessageWithDelay();
             $this->fileHandler->saveNameCustomer($this->chatId,$nameCustomer);
             $text = "شماره مشتری جدید را وارد کنید";
 
@@ -138,9 +141,10 @@ class BotHandler
                 'inline_keyboard' => $keyboard
             ];
 
-            $this->sendRequest('sendMessage', [
+            $this->sendRequest('editMessageText', [
                 'chat_id' => $this->chatId,
                 'text' => $text,
+               'message_id' => $messageId,
                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
 
