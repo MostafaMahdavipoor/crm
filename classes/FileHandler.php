@@ -125,18 +125,6 @@ class FileHandler
         return $data[$chatId]['status'] ?? null;
     }
 
-    public function savenumberCustomer($chatId, $numberCustomer)
-    {
-        $data = $this->getAllData();
-        $data[$chatId]['number'] = $numberCustomer; // ذخیره شماره مشتری
-        $this->saveAllData($data);
-    }
-
-    public function getnumberCustomer($chatId)
-    {
-        $data = $this->getAllData();
-        return $data[$chatId]['number'] ?? null;
-    }
 
     public function saveNoteCustomer($chatId, $noteCustomer)
     {
