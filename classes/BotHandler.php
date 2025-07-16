@@ -226,6 +226,7 @@ class BotHandler
             $this->fileHandler->savenumberCustomer($this->chatId, $numberCustomer);
 
             $text = "لطفاً ایمیل مشتری را وارد کنید:";
+            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
 
             $keyboard = [
                 [['text' => '📝 رد کردن مرحله ایمیل', 'callback_data' => 'skip_email']],
@@ -246,7 +247,7 @@ class BotHandler
         }
 
         if ($state == 'witting_customer_creation_email') {
-            $emailCustomer = $this->text;  // ذخیره ایمیل مشتری
+            $emailCustomer = $this->text;
             $messageId = $this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
             $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
