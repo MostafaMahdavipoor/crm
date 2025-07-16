@@ -223,7 +223,7 @@ class BotHandler
             $numberCustomer = $this->text;
             $messageId = $this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
-            $this->fileHandler->savenumberCustomer($this->chatId, $numberCustomer);
+            $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
 
             $text = "لطفاً ایمیل مشتری را وارد کنید:";
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");

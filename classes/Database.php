@@ -257,29 +257,26 @@ class Database
 
     public function insertCustomer($adminChatId, $name, $phone, $email, $status, $note = null)
     {
-        // بررسی وجود مشتری قبلی
         $stmt = $this->mysqli->prepare("SELECT * FROM customers WHERE phone = ? LIMIT 1");
         $stmt->bind_param("s", $phone);
         $stmt->execute();
         $result = $stmt->get_result();
         if ($result->num_rows > 0) {
-            return false; // اگر مشتری با همین شماره قبلاً وجود دارد، مشتری اضافه نمی‌شود
+            return false;
         }
         $stmt->close();
 
-        // افزودن مشتری جدید
-        $stmt = $this->mysqli->prepare("
+         $stmt = $this->mysqli->prepare("
         INSERT INTO customers (admin_chat_id, name, phone, email, status, note, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
     ");
-        // اصلاح bind_param برای تطابق با تعداد پارامترها
         $stmt->bind_param("ssssss", $adminChatId, $name, $phone, $email, $status, $note);
         if ($stmt->execute()) {
             $stmt->close();
-            return true; // مشتری جدید با موفقیت اضافه شد
+            return true;
         } else {
             $stmt->close();
-            return false; // خطا در افزودن مشتری
+            return false;
         }
     }
 
