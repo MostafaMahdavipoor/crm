@@ -90,13 +90,11 @@ class BotHandler
             error_log("Callback query missing required data.");
             return;
         }
-        if (str_starts_with($callbackData, 'start_form:')) {
-            $formKey = explode(':', $callbackData)[1];
-            $formsConfig = require __DIR__ . '/../classes/Forms.php';
-            $stateManager = new \Bot\StateManager();
-            $formManager = new \Bot\FormManager($this, $stateManager, $formsConfig);
-            $formManager->start($chatId, $formKey);
-            return;
+        if (str_starts_with($callbackData, 'customer_creation')) {
+            $this->sendRequest('sendMessage', [
+                'chat_id' => $chatId,
+                'text' => "سلام",
+            ]);
         }
     }
 
