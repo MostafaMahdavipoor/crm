@@ -132,6 +132,7 @@ class BotHandler
             $messageId=$this->fileHandler->getMessageIds($this->chatId);
             $this->deleteMessageWithDelay();
             $this->fileHandler->saveNameCustomer($this->chatId,$nameCustomer);
+            $this->fileHandler->saveState($this->chatId,"witting_customer_creation_number");
             $text = "شماره مشتری جدید را وارد کنید";
 
             $keyboard = [
