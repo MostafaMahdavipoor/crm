@@ -86,29 +86,27 @@ class BotHandler
 
         if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
             $text = "📝 لطفاً نام کامل مشتری را وارد کنید:";
-        }
-
         $keyboard = [
-                [['text' => '📝 برگشت', 'callback_data' => 'back']],
-            ];
-            $this->fileHandler->saveMessageId($chatId, $messageId);
-            $this->fileHandler->saveState($chatId, "witting_customer_creation_name");
+            [['text' => '📝 برگشت', 'callback_data' => 'back']],
+        ];
+        $this->fileHandler->saveMessageId($chatId, $messageId);
+        $this->fileHandler->saveState($chatId, "witting_customer_creation_name");
 
-            $reply_markup = [
-                'inline_keyboard' => $keyboard
-            ];
+        $reply_markup = [
+            'inline_keyboard' => $keyboard
+        ];
 
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $chatId,
-                'text' => $text,
-                'message_id' => $messageId,
-                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
-            ]);
-
-        if (str_starts_with($callbackData, 'back')) {
+        $this->sendRequest('editMessageText', [
+            'chat_id' => $chatId,
+            'text' => $text,
+            'message_id' => $messageId,
+            'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+        ]);
+        }
+        elseif (str_starts_with($callbackData, 'back')) {
             $this->showMainMenu($this->chatId, $messageId);
         }
-        if (str_starts_with($callbackData, 'cancel')) {
+        elseif (str_starts_with($callbackData, 'cancel')) {
             $this->showMainMenu($this->chatId, $messageId);
         } elseif (str_starts_with($callbackData, 'back_number')) {
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
