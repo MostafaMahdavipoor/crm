@@ -238,7 +238,7 @@ class BotHandler
                 'text' => $text,
                 'message_id' => $messageId,
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
-                'parse_mode' => 'HTML'  // استفاده از HTML برای پارس مود
+                'parse_mode' => 'HTML'
             ]);
         }
 
@@ -284,7 +284,8 @@ class BotHandler
                 'chat_id' => $this->chatId,
                 'text' => $text,
                 'message_id' => $messageId,
-                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'HTML'
             ]);
         }
          //email
