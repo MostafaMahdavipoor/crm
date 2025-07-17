@@ -213,9 +213,9 @@ class BotHandler
             $this->fileHandler->saveNameCustomer($this->chatId, $nameCustomer);
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
 
-            // ترکیب صحیح رشته‌ها با استفاده از <blockquote> و HTML
-            $text = "<blockquote dir='rtl'> نام مشتری :$nameCustomer</blockquote> = " .
-                "📞 لطفاً شماره تماس مشتری جدید برای *$nameCustomer* را وارد کنید:\n" .
+            // استفاده از HTML و پارس مود برای قالب بندی
+            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
+                "📞 لطفاً شماره تماس مشتری جدید برای <b>$nameCustomer</b> را وارد کنید:\n" .
                 "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
 
             $keyboard = [
@@ -235,6 +235,7 @@ class BotHandler
                 'parse_mode' => 'HTML'  // استفاده از HTML برای پارس مود
             ]);
         }
+
 
 
 
