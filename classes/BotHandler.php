@@ -85,9 +85,10 @@ class BotHandler
         }
 
         if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
-            $text = "لطفاً نام کامل مشتری را وارد کنید:";
+            $text = "📝 لطفاً نام کامل مشتری را وارد کنید:";
+        }
 
-            $keyboard = [
+        $keyboard = [
                 [['text' => '📝 برگشت', 'callback_data' => 'back']],
             ];
             $this->fileHandler->saveMessageId($chatId, $messageId);
@@ -103,11 +104,11 @@ class BotHandler
                 'message_id' => $messageId,
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
-        } elseif (str_starts_with($callbackData, 'cancel')) {
+        if (str_starts_with($callbackData, 'cancel')) {
             $this->showMainMenu($this->chatId, $messageId);
         } elseif (str_starts_with($callbackData, 'back_number')) {
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
-            $text = "لطفاً شماره مشتری جدید را وارد کنید:";
+            $text = "📞 لطفاً شماره مشتری جدید را وارد کنید";
 
             $keyboard = [
                 [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
@@ -135,9 +136,9 @@ class BotHandler
             $result = $this->db->insertCustomer($this->chatId, $name, $phone, $email, $statusCustomer, $note);
 
             if ($result) {
-                $text = "ثبت مشتری با موفقیت انجام شد!";
+                $text = "✅ ثبت مشتری با موفقیت انجام شد!";
             } else {
-                $text = "این شماره قبلاً ثبت شده است.";
+                $text = "❗ این شماره قبلاً ثبت شده است.";
             }
 
             $keyboard = [
@@ -158,7 +159,7 @@ class BotHandler
             ]);
         } elseif (str_starts_with($callbackData, 'skip_email')) {
             $this->fileHandler->saveState($this->chatId, "completed");
-            $text = "ثبت مشتری با موفقیت انجام شد!";
+            $text = "✅ ثبت مشتری با موفقیت انجام شد!";
 
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
@@ -245,7 +246,7 @@ class BotHandler
             $this->deleteMessageWithDelay();
             $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
 
-            $text = "لطفاً ایمیل مشتری را وارد کنید:";
+            $text = "✉️ لطفاً ایمیل مشتری را وارد کنید";
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
 
             $keyboard = [
