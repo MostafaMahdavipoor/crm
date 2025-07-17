@@ -235,19 +235,38 @@ class BotHandler
             ]);
         }
 
-
-
-
-
         if ($state == 'witting_customer_creation_number') {
-            $numberCustomer = $this->text;
-            if (empty($numberCustomer)) {
+
+            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
+                "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
+                "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
+
+            if ($state == 'witting_customer_creation_number') {
+                $phoneCustomer = $this->text;
+
+                // الگوی معتبر برای شماره تماس ایرانی با فرمت ۰۹۳۴۵۶۷۸۹۱۲
+                if (!preg_match('/^09\d{9}$/', $phoneCustomer)) {
+                    $this->sendRequest('sendMessage', [
+                        'chat_id' => $this->chatId,
+                        'text' => "❌ شماره تماس وارد شده معتبر نیست. لطفاً شماره‌ای با فرمت صحیح وارد کنید. (مثال: 09345678912)",
+                    ]);
+                    return;
+                }
+
+                // در صورتی که شماره معتبر باشد
+                $this->fileHandler->savePhoneCustomer($this->chatId, $phoneCustomer);
+                $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
+
+                // پیام موفقیت
                 $this->sendRequest('sendMessage', [
                     'chat_id' => $this->chatId,
-                    'text' => "❌ لطفاً شماره تلفن را وارد کنید.",
+                    'text' => "✅ شماره تماس مشتری جدید با موفقیت ثبت شد. لطفاً ایمیل مشتری را وارد کنید."
                 ]);
-                return;
             }
+
+            return;
+            }
+            $name = $this->fileHandler->getNameCustomer($this->chatId);
 
             $messageId = $this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
@@ -277,17 +296,17 @@ class BotHandler
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
         }
+         //email
+            if ($state == 'witting_customer_creation_email') {
+               $emailCustomer = $this->text;
 
-        if ($state == 'witting_customer_creation_email') {
-           $emailCustomer = $this->text;
-
-            if (!filter_var($emailCustomer, FILTER_VALIDATE_EMAIL)) {
-                $this->sendRequest('sendMessage', [
-                    'chat_id' => $this->chatId,
-                    'text' => "❌ ایمیل وارد شده معتبر نیست. لطفاً یک ایمیل صحیح وارد کنید.",
-                ]);
-                return;
-            }
+                if (!filter_var($emailCustomer, FILTER_VALIDATE_EMAIL)) {
+                    $this->sendRequest('sendMessage', [
+                        'chat_id' => $this->chatId,
+                        'text' => "❌ ایمیل وارد شده معتبر نیست. لطفاً یک ایمیل صحیح وارد کنید.",
+                    ]);
+                    return;
+                }
 
             $messageId = $this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
