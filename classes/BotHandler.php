@@ -109,13 +109,18 @@ class BotHandler
         elseif (str_starts_with($callbackData, 'cancel')) {
             $this->showMainMenu($this->chatId, $messageId);
         } elseif (str_starts_with($callbackData, 'back_number')) {
+            $nameCustomer=$this->fileHandler->getNameCustomer($this->chatId);
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
-            $text = "📞 لطفاً شماره مشتری جدید را وارد کنید";
+
+            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
+                "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
+                "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
 
             $keyboard = [
-                [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
-                [['text' => '📝 برگشت', 'callback_data' => 'back_name']],
+                [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                [['text' => '🔙 برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
+
             $reply_markup = [
                 'inline_keyboard' => $keyboard
             ];
@@ -124,8 +129,10 @@ class BotHandler
                 'chat_id' => $this->chatId,
                 'text' => $text,
                 'message_id' => $messageId,
-                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'HTML'
             ]);
+
         } elseif (str_starts_with($callbackData, 'cold') || str_starts_with($callbackData, 'in_progress') || str_starts_with($callbackData, 'active_customer')) {
             $statusCustomer = $callbackData;
             $this->fileHandler->saveStatusCustomer($this->chatId, $statusCustomer);
@@ -235,36 +242,16 @@ class BotHandler
             ]);
         }
 
+
         if ($state == 'witting_customer_creation_number') {
 
-            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
-                "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
-                "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
-
-            if ($state == 'witting_customer_creation_number') {
-                $phoneCustomer = $this->text;
-
-                // الگوی معتبر برای شماره تماس ایرانی با فرمت ۰۹۳۴۵۶۷۸۹۱۲
-                if (!preg_match('/^09\d{9}$/', $phoneCustomer)) {
-                    $this->sendRequest('sendMessage', [
-                        'chat_id' => $this->chatId,
-                        'text' => "❌ شماره تماس وارد شده معتبر نیست. لطفاً شماره‌ای با فرمت صحیح وارد کنید. (مثال: 09345678912)",
-                    ]);
-                    return;
-                }
-
-                // در صورتی که شماره معتبر باشد
-                $this->fileHandler->savePhoneCustomer($this->chatId, $phoneCustomer);
-                $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
-
-                // پیام موفقیت
+            $numberCustomer = $this->text;
+            if (!preg_match('/^09\d{9}$/', $numberCustomer)) {
                 $this->sendRequest('sendMessage', [
                     'chat_id' => $this->chatId,
-                    'text' => "✅ شماره تماس مشتری جدید با موفقیت ثبت شد. لطفاً ایمیل مشتری را وارد کنید."
+                    'text' => "❌ شماره تماس وارد شده معتبر نیست. لطفاً شماره‌ای با فرمت صحیح وارد کنید. (مثال: 09345678912)",
                 ]);
-            }
-
-            return;
+                return;
             }
             $name = $this->fileHandler->getNameCustomer($this->chatId);
 
@@ -272,7 +259,11 @@ class BotHandler
             $this->deleteMessageWithDelay();
             $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
 
-            $text = "✉️ لطفاً ایمیل مشتری را وارد کنید";
+            $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
+                "n\<blockquote dir='rtl'>  شماره تماس: $numberCustomer</blockquote>" .
+                "📞 لطفاًایمیل مشتری جدید را وارد کنید:\n" .
+                "🔑 ایمیل برای ارتباط با مشتری کاربردی است. لطفاً ایمیل را با دقت وارد کنید.";
+
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
 
             $keyboard = [
