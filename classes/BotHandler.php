@@ -104,6 +104,10 @@ class BotHandler
                 'message_id' => $messageId,
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
+
+        if (str_starts_with($callbackData, 'back')) {
+            $this->showMainMenu($this->chatId, $messageId);
+        }
         if (str_starts_with($callbackData, 'cancel')) {
             $this->showMainMenu($this->chatId, $messageId);
         } elseif (str_starts_with($callbackData, 'back_number')) {
@@ -211,7 +215,8 @@ class BotHandler
             $this->fileHandler->saveNameCustomer($this->chatId, $nameCustomer);
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
 
-            $text = "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n\n" .
+            // استفاده از پارس مود برای قالب بندی و نمایش نام مشتری
+            $text = "📞 لطفاً شماره تماس مشتری جدید برای *{$nameCustomer}* را وارد کنید:\n\n" .
                 "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
 
             $keyboard = [
@@ -227,9 +232,11 @@ class BotHandler
                 'chat_id' => $this->chatId,
                 'text' => $text,
                 'message_id' => $messageId,
-                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'Markdown'  // استفاده از Markdown برای پارس مود
             ]);
         }
+
 
 
         if ($state == 'witting_customer_creation_number') {
