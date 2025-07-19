@@ -404,4 +404,11 @@ class BotHandler
         ];
         $logMessage = json_encode($logData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
+ /*
+ *
+ * *
+ * 
+ * 
+ * 
+ * /
 }
