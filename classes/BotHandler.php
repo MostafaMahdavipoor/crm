@@ -153,6 +153,8 @@ class BotHandler
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
                 [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
+                [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                [['text' => '🔙 برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
 
 
@@ -173,6 +175,8 @@ class BotHandler
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
                 [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
+                [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                [['text' => '🔙 برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
 
 
@@ -208,6 +212,7 @@ class BotHandler
     public function handleRequest(): void
     {
         $state = $this->fileHandler->getState($this->chatId);
+        error_log("State: " . $state);
 
         if ($this->text === '/start') {
             $this->showMainMenu($this->chatId);
@@ -219,6 +224,7 @@ class BotHandler
             $this->deleteMessageWithDelay();
             $this->fileHandler->saveNameCustomer($this->chatId, $nameCustomer);
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
+
 
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
                 "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
@@ -290,9 +296,9 @@ class BotHandler
         }
          //email
             if ($state == 'witting_customer_creation_email') {
-               $emailCustomer = $this->text;
 
-                if (!filter_var($emailCustomer, FILTER_VALIDATE_EMAIL)) {
+               $emailCustomer = $this->text;
+               if (!filter_var($emailCustomer, FILTER_VALIDATE_EMAIL)) {
                     $this->sendRequest('sendMessage', [
                         'chat_id' => $this->chatId,
                         'text' => "❌ ایمیل وارد شده معتبر نیست. لطفاً یک ایمیل صحیح وارد کنید.",
@@ -334,7 +340,7 @@ class BotHandler
     private function showMainMenu($chatId, $messageId = null): void
     {
         $text = "👋 به سیستم مدیریت مشتری خوش اومدی!\nاز منوی زیر یکی از گزینه‌ها رو انتخاب کن:";
-
+        error_log("message Id: " . $messageId);
         $keyboard = [
             [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
             [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
@@ -402,13 +408,15 @@ class BotHandler
             'http_code' => $httpCode,
             'curl_error' => $curlError
         ];
+        
         $logMessage = json_encode($logData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
  /*
  *
- * *
+ * 
  * 
  * 
  * https://api.telegram.org/bot7562480934:AAGG2BoPddJlgA3DRwggRODE9-qXVFY_r-o/setWebhook?url=https://www.rammehraz.com/Rambot/test/atefetest/crm
- * /
+ * /*
 }
+ 
