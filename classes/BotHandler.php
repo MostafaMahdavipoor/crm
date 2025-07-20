@@ -110,7 +110,7 @@ class BotHandler
             $this->showMainMenu($this->chatId, $messageId);
         } elseif (str_starts_with($callbackData, 'back_number')) {
             $nameCustomer=$this->fileHandler->getNameCustomer($this->chatId);
-            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
+            $this->fileHandler->saveState($this->chatId, "NULL");
 
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
                 "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
@@ -307,34 +307,39 @@ class BotHandler
                     return;
                 }
 
-            $messageId = $this->fileHandler->getMessageId($this->chatId);
-            $this->deleteMessageWithDelay();
-            $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
+                $messageId = $this->fileHandler->getMessageId($this->chatId);
+                $this->deleteMessageWithDelay();
+                $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
 
-            $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
-                "\n<blockquote dir='rtl'>  شماره تماس: $numberCustomer</blockquote>" .
-                "\n<blockquote dir='rtl'>  ایمیل: $emailCustomer</blockquote>" .
-                "لطفاً وضعیت مشتری را انتخاب کنید:\n\n" .
-                "❄️ وضعیت مشتری می‌تواند یکی از گزینه‌های زیر باشد:";
+                $name = $this->fileHandler->getNameCustomer($this->chatId);
+                $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
 
-            $keyboard = [
-                [['text' => '❄️ سرد', 'callback_data' => 'cold']],
-                [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
-                [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
-                [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
-                [['text' => '🔙 برگشت', 'callback_data' => 'back_email']],
+                $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
+                 "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
+                 "\n<blockquote dir='rtl'>ایمیل: $emailCustomer</blockquote>" .
+                 "لطفاً وضعیت مشتری را انتخاب کنید:\n" .
+                 " وضعیت مشتری می‌تواند یکی از گزینه‌های زیر باشد:";
+
+                 $keyboard = [
+                     [['text' => '❄️ سرد', 'callback_data' => 'cold']],
+                     [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
+                     [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
+                     [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
+                     [['text' => '🔙 برگشت', 'callback_data' => 'back_email']],
             ];
 
             $reply_markup = [
                 'inline_keyboard' => $keyboard
             ];
 
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $this->chatId,
-                'text' => $text,
-                'message_id' => $messageId,
-                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+                     $this->sendRequest('editMessageText', [
+                    'chat_id' => $this->chatId,
+                    'text' => $text,
+                    'message_id' => $messageId,
+                    'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                    'parse_mode' => 'HTML'
             ]);
+            $this->fileHandler->saveState($this->chatId, null);
         }
 
 
