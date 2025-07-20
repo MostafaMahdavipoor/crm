@@ -84,6 +84,38 @@ class BotHandler
             return;
         }
 
+        // از اینجا به بعد، کدهای مربوط به مدیریت کالبک‌ها را اضافه می‌کنیم
+
+        if (str_starts_with($callbackData, 'list_customers') ) {
+
+            $customers = $this->db->getCustomers();
+            $keyboard =[];
+            if (empty($customers)) {
+                $text = "❗️ هیچ مشتری‌ای ثبت نشده است.";
+            }else{
+                $text = "📋 لیست مشتری‌ها:\n";
+                foreach ($customers as $customer) {
+                    $keyboard[] = [
+                        ['text' => $customer['name'], 'callback_data' => 'customer_' . $customer['id']]
+                    ];
+                }
+            }
+            $keyboard[] = [
+                    [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
+                    [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                ];
+
+                $this->sendRequest('editMessageText', [
+                    'chat_id' => $chatId,
+                    'message_id' => $messageId,
+                    'text' => $text,
+                    'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+                ]);
+
+            return;
+        }
+         
+
         if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
             $text = "📝 لطفاً نام کامل مشتری را وارد کنید:";
         $keyboard = [
@@ -107,6 +139,7 @@ class BotHandler
             $this->showMainMenu($this->chatId, $messageId);
         }
         elseif (str_starts_with($callbackData, 'cancel')) {
+            $this->fileHandler->saveState($this->chatId, "");
             $this->showMainMenu($this->chatId, $messageId);
         } elseif (str_starts_with($callbackData, 'back_number')) {
             $nameCustomer=$this->fileHandler->getNameCustomer($this->chatId);
@@ -214,9 +247,16 @@ class BotHandler
         $state = $this->fileHandler->getState($this->chatId);
         error_log("State: " . $state);
 
+        
+
         if ($this->text === '/start') {
+            $this->fileHandler->saveState($this->chatId, null);
             $this->showMainMenu($this->chatId);
         }
+// از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
+
+
+
 
         if ($state == 'witting_customer_creation_name') {
             $nameCustomer = $this->text;
