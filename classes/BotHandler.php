@@ -113,8 +113,6 @@ class BotHandler
                 'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
             ]);
         
-        
-
             return;
         }
 
