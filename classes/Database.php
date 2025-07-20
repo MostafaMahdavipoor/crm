@@ -300,6 +300,24 @@ class Database
     }
 
 
+    
+    public function getCustomersbyId($customerId){
+        $stmt = $this->mysqli->prepare("SELECT * FROM customers WHERE id = ? LIMIT 1");
+        if (!$stmt) {
+            error_log("❌ Prepare failed: " . $this->mysqli->error);
+            return [];
+        }
+        $stmt->bind_param("i", $customerId);
+        if (!$stmt->execute()) {
+            error_log("❌ Execute failed: " . $stmt->error);
+            return [];
+        }
+        $result = $stmt->get_result();
+        $customer = $result->fetch_assoc();
+        $stmt->close();
+        return $customer;
+    }
 
-}
+    }
+
 ?>
