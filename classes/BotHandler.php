@@ -86,7 +86,39 @@ class BotHandler
 
         // از اینجا به بعد، کدهای مربوط به مدیریت کالبک‌ها را اضافه می‌کنیم
 
-       if (str_starts_with($callbackData, 'list_customers')) {
+
+
+         if (str_starts_with($callbackData, 'customer_') ) {
+             $customerId = str_replace('customer_', '', $callbackData);
+             $customer = $this->db->getCustomersbyId($customerId);
+
+            if ($customer) {
+        
+                $text = "📋 اطلاعات مشتری:\n";
+                $text .= "نام: " . $customer['name'] . "\n";
+                $text .= "شماره تماس: " . $customer['phone'] . "\n";
+                $text .= " ایمیل کاربر: " . $customer['email'] . "\n";
+            } else {
+                $text = "❗️ مشتری پیدا نشد.";
+            }
+              $keyboard[] = [
+                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
+                ['text' => '🚫 بازگشت ', 'callback_data' => 'list_customers']
+            ];
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
+            ]);
+        
+        
+
+            return;
+        }
+
+
+        if (str_starts_with($callbackData, 'list_customers')) {
             $customers = $this->db->getCustomers();
             $keyboard = [];
             if (empty($customers)) {
