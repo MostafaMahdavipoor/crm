@@ -271,7 +271,7 @@ class Database
         $stmt = $this->mysqli->prepare("
         INSERT INTO customers (admin_chat_id, name, phone, email, status, note, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
-    ");
+        ");
         // اصلاح bind_param برای تطابق با تعداد پارامترها
         $stmt->bind_param("ssssss", $adminChatId, $name, $phone, $email, $status, $note);
         if ($stmt->execute()) {
@@ -282,6 +282,23 @@ class Database
             return false;
         }
     }
+
+    public function getCustomers(){
+        $stmt = $this->mysqli->prepare("SELECT * FROM customers ORDER BY created_at DESC");
+        if (!$stmt) {
+            error_log("❌ Prepare failed: " . $this->mysqli->error);
+            return [];
+        }
+        if (!$stmt->execute()) {
+            error_log("❌ Execute failed: " . $stmt->error);
+            return [];
+        }
+        $result = $stmt->get_result();
+        $customers = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $customers;
+    }
+
 
 
 }

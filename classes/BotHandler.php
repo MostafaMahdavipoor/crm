@@ -89,6 +89,7 @@ class BotHandler
         if (str_starts_with($callbackData, 'list_customers') ) {
 
             $customers = $this->db->getCustomers();
+            error_log("Customers: " . print_r($customers, true));
             $keyboard =[];
             if (empty($customers)) {
                 $text = "❗️ هیچ مشتری‌ای ثبت نشده است.";
