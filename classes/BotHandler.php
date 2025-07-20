@@ -259,6 +259,7 @@ class BotHandler
                 ]);
                 return;
             }
+            
             $name = $this->fileHandler->getNameCustomer($this->chatId);
 
             $messageId = $this->fileHandler->getMessageId($this->chatId);
@@ -266,7 +267,7 @@ class BotHandler
             $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
 
             $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
-                "n\<blockquote dir='rtl'>  شماره تماس: $numberCustomer</blockquote>" .
+                "\n<blockquote dir='rtl'>  شماره تماس: $numberCustomer</blockquote>" .
                 "📞 لطفاًایمیل مشتری جدید را وارد کنید:\n" .
                 "🔑 ایمیل برای ارتباط با مشتری کاربردی است. لطفاً ایمیل را با دقت وارد کنید.";
 
@@ -296,8 +297,8 @@ class BotHandler
         }
          //email
             if ($state == 'witting_customer_creation_email') {
-
-               $emailCustomer = $this->text;
+              $emailCustomer = $this->text;
+              
                if (!filter_var($emailCustomer, FILTER_VALIDATE_EMAIL)) {
                     $this->sendRequest('sendMessage', [
                         'chat_id' => $this->chatId,
@@ -310,7 +311,10 @@ class BotHandler
             $this->deleteMessageWithDelay();
             $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
 
-             $text = "لطفاً وضعیت مشتری را انتخاب کنید:\n\n" .
+            $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
+                "\n<blockquote dir='rtl'>  شماره تماس: $numberCustomer</blockquote>" .
+                "\n<blockquote dir='rtl'>  ایمیل: $emailCustomer</blockquote>" .
+                "لطفاً وضعیت مشتری را انتخاب کنید:\n\n" .
                 "❄️ وضعیت مشتری می‌تواند یکی از گزینه‌های زیر باشد:";
 
             $keyboard = [
@@ -408,15 +412,15 @@ class BotHandler
             'http_code' => $httpCode,
             'curl_error' => $curlError
         ];
-        
         $logMessage = json_encode($logData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
- /*
- *
- * 
- * 
- * 
- * https://api.telegram.org/bot7562480934:AAGG2BoPddJlgA3DRwggRODE9-qXVFY_r-o/setWebhook?url=https://www.rammehraz.com/Rambot/test/atefetest/crm
- * /*
+
+
+
+
+
+
+
+
 }
- 
+?>
