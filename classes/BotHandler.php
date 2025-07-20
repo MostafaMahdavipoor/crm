@@ -86,14 +86,12 @@ class BotHandler
 
         // از اینجا به بعد، کدهای مربوط به مدیریت کالبک‌ها را اضافه می‌کنیم
 
-        if (str_starts_with($callbackData, 'list_customers') ) {
-
+       if (str_starts_with($callbackData, 'list_customers')) {
             $customers = $this->db->getCustomers();
-            error_log("Customers: " . print_r($customers, true));
-            $keyboard =[];
+            $keyboard = [];
             if (empty($customers)) {
                 $text = "❗️ هیچ مشتری‌ای ثبت نشده است.";
-            }else{
+            } else {
                 $text = "📋 لیست مشتری‌ها:\n";
                 foreach ($customers as $customer) {
                     $keyboard[] = [
@@ -102,16 +100,16 @@ class BotHandler
                 }
             }
             $keyboard[] = [
-                    [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
-                    [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
-                ];
+                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
+                ['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']
+            ];
 
-                $this->sendRequest('editMessageText', [
-                    'chat_id' => $chatId,
-                    'message_id' => $messageId,
-                    'text' => $text,
-                    'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
-                ]);
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
+            ]);
 
             return;
         }
