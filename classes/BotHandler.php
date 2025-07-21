@@ -131,8 +131,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
               $keyboard[] = [
 
                 ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🚫 بازگشت ', 'callback_data' => 'list_customers'],
-                ['text' => 'اطلاعات مشتری', 'callback_data' => 'show_dates_panel']
+                ['text' => '🚫 بازگشت ', 'callback_data' => 'list_customers']
             ];
             $this->sendRequest('editMessageText', [
                 'chat_id' => $chatId,
@@ -145,8 +144,8 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
         }
 
 
-        if (str_starts_with($callbackData, 'show_dates_panel ')) {
-            $dates = $this->db->getUniqueCustomerRegistrationDates();
+        if (str_starts_with($callbackData, 'list_customers')) {
+            $customers = $this->db->getCustomers();
             $keyboard = [];
             if (empty($customers)) {
                 $text = "❗️ هیچ مشتری‌ای ثبت نشده است.";
@@ -173,6 +172,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
             return;
         }
          
+
         
         elseif (str_starts_with($callbackData, 'back_number')) {
             $nameCustomer=$this->fileHandler->getNameCustomer($this->chatId);
@@ -234,8 +234,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                 'message_id' => $messageId,
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
-        } 
-        elseif (str_starts_with($callbackData, 'skip_email')) {
+        } elseif (str_starts_with($callbackData, 'skip_email')) {
             $this->fileHandler->saveState($this->chatId, "completed");
             $text = "✅ ثبت مشتری با موفقیت انجام شد!";
 
@@ -343,13 +342,12 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
         $state = $this->fileHandler->getState($this->chatId);
         error_log("State: " . $state);
 
-    
+        
 
         if ($this->text === '/start') {
             $this->fileHandler->saveState($this->chatId, null);
             $this->showMainMenu($this->chatId);
         }
-
 // از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
 
 
