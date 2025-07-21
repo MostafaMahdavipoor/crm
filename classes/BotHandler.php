@@ -124,13 +124,14 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                 $text .= "شماره تماس: " . $customer['phone'] . "\n";
                 $text .= " ایمیل کاربر: " . $customer['email'] . "\n";
                 $text .= "وضعیت مشتری: " . $customer['status'] . "\n";
+
             } else {
                 $text = "❗️ مشتری پیدا نشد.";
             }
               $keyboard[] = [
 
                 ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🚫 بازگشت ', 'callback_data' => 'list_customers']
+                ['text' => '🗓️ بازگشت به انتخاب تاریخ', 'callback_data' => 'show_dates_panel']
             ];
             $this->sendRequest('editMessageText', [
                 'chat_id' => $chatId,
@@ -143,8 +144,8 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
         }
 
 
-        if (str_starts_with($callbackData, 'list_customers')) {
-            $customers = $this->db->getCustomers();
+        if (str_starts_with($callbackData, 'show_dates_panel ')) {
+            $dates = $this->db->getUniqueCustomerRegistrationDates();
             $keyboard = [];
             if (empty($customers)) {
                 $text = "❗️ هیچ مشتری‌ای ثبت نشده است.";
@@ -170,9 +171,36 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
 
             return;
         }
-         
 
+       elseif ($callbackData === 'show_dates_panel') {
+    $dates = $this->db->getUniqueCustomerRegistrationDates(); 
+    $keyboard = []; 
+
+    if (!empty($dates)) {
+       $text = "🗓️ لطفاً یک تاریخ را از لیست زیر انتخاب کنید:\n";
+        foreach ($dates as $date) {
+            $keyboard[] = [['text' => $date, 'callback_data' => 'list_customers_by_date_' . $date]];
+        }
+    } else {
+    
+        $text = "❗️ هیچ مشتری‌ای ثبت نشده است تا تاریخی برای نمایش باشد.";
+    }
+
+    $keyboard[] = [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']];
+    $keyboard[] = [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']];
+
+    $this->sendRequest('editMessageText', [
+        'chat_id' => $chatId,
+        'message_id' => $messageId,
+        'text' => $text,
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
+    ]);
+
+    return;
+}
         
+
+
         elseif (str_starts_with($callbackData, 'back_number')) {
             $nameCustomer=$this->fileHandler->getNameCustomer($this->chatId);
             $this->fileHandler->saveState($this->chatId, "NULL");
@@ -233,7 +261,8 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                 'message_id' => $messageId,
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
-        } elseif (str_starts_with($callbackData, 'skip_email')) {
+        } 
+        elseif (str_starts_with($callbackData, 'skip_email')) {
             $this->fileHandler->saveState($this->chatId, "completed");
             $text = "✅ ثبت مشتری با موفقیت انجام شد!";
 
@@ -341,12 +370,13 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
         $state = $this->fileHandler->getState($this->chatId);
         error_log("State: " . $state);
 
-        
+    
 
         if ($this->text === '/start') {
             $this->fileHandler->saveState($this->chatId, null);
             $this->showMainMenu($this->chatId);
         }
+
 // از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
 
 

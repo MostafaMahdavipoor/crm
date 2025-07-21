@@ -317,6 +317,24 @@ class Database
         $stmt->close();
         return $customer;
     }
+    public function getUniqueCustomerRegistrationDates(){
+           $dates = [];
+           $stmt = $this->mysqli->prepare("SELECT DISTINCT DATE(created_at) as registration_date FROM customers");
+           if (!$stmt) {
+               error_log("❌ Prepare failed: " . $this->mysqli->error);
+               return [];
+           }
+           if (!$stmt->execute()) {
+               error_log("❌ Execute failed: " . $stmt->error);
+               return [];
+           }
+           $result = $stmt->get_result();
+           while ($row = $result->fetch_assoc()) {
+               $dates[] = $row['registration_date'];
+           }
+           $stmt->close();
+           return $dates;
+    }
 
     }
 
