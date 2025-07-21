@@ -86,66 +86,7 @@ class BotHandler
 
         // از اینجا به بعد، کدهای مربوط به مدیریت کالبک‌ها را اضافه می‌کنیم
 
-
-
-         if (str_starts_with($callbackData, 'customer_') ) {
-             $customerId = str_replace('customer_', '', $callbackData);
-             $customer = $this->db->getCustomersbyId($customerId);
-
-            if ($customer) {
         
-                $text = "📋 اطلاعات مشتری:\n";
-                $text .= "نام: " . $customer['name'] . "\n";
-                $text .= "شماره تماس: " . $customer['phone'] . "\n";
-                $text .= " ایمیل کاربر: " . $customer['email'] . "\n";
-            } else {
-                $text = "❗️ مشتری پیدا نشد.";
-            }
-              $keyboard[] = [
-
-                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🚫 بازگشت ', 'callback_data' => 'list_customers']
-            ];
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $chatId,
-                'message_id' => $messageId,
-                'text' => $text,
-                'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
-            ]);
-        
-            return;
-        }
-
-
-        if (str_starts_with($callbackData, 'list_customers')) {
-            $customers = $this->db->getCustomers();
-            $keyboard = [];
-            if (empty($customers)) {
-                $text = "❗️ هیچ مشتری‌ای ثبت نشده است.";
-            } else {
-                $text = "📋 لیست مشتری‌ها:\n";
-                foreach ($customers as $customer) {
-                    $keyboard[] = [
-                        ['text' => $customer['name'], 'callback_data' => 'customer_' . $customer['id']]
-                    ];
-                }
-            }
-            $keyboard[] = [
-                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']
-            ];
-
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $chatId,
-                'message_id' => $messageId,
-                'text' => $text,
-                'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
-            ]);
-
-            return;
-        }
-         
-
         if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
             $text = "📝 لطفاً نام کامل مشتری را وارد کنید:";
         $keyboard = [
@@ -241,6 +182,67 @@ class BotHandler
                 [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
                 [['text' => '🔙 برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
+
+
+
+        if (str_starts_with($callbackData, 'customer_') ) {
+            $customerId = str_replace('customer_', '', $callbackData);
+            $customer = $this->db->getCustomersbyId($customerId);
+
+            if ($customer) {
+        
+                $text = "📋 اطلاعات مشتری:\n";
+                $text .= "نام: " . $customer['name'] . "\n";
+                $text .= "شماره تماس: " . $customer['phone'] . "\n";
+                $text .= " ایمیل کاربر: " . $customer['email'] . "\n";
+            } else {
+                $text = "❗️ مشتری پیدا نشد.";
+            }
+              $keyboard[] = [
+
+                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
+                ['text' => '🚫 بازگشت ', 'callback_data' => 'list_customers']
+            ];
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
+            ]);
+        
+            return;
+        }
+
+
+        if (str_starts_with($callbackData, 'list_customers')) {
+            $customers = $this->db->getCustomers();
+            $keyboard = [];
+            if (empty($customers)) {
+                $text = "❗️ هیچ مشتری‌ای ثبت نشده است.";
+            } else {
+                $text = "📋 لیست مشتری‌ها:\n";
+                foreach ($customers as $customer) {
+                    $keyboard[] = [
+                        ['text' => $customer['name'], 'callback_data' => 'customer_' . $customer['id']]
+                    ];
+                }
+            }
+            $keyboard[] = [
+                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
+                ['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
+            ]);
+
+            return;
+        }
+         
+
 
 
             $reply_markup = [
