@@ -112,6 +112,7 @@ class BotHandler
         elseif (str_starts_with($callbackData, 'cancel')) {
             $this->fileHandler->saveState($this->chatId, "");
             $this->showMainMenu($this->chatId, $messageId);
+
         } elseif (str_starts_with($callbackData, 'back_number')) {
             $nameCustomer=$this->fileHandler->getNameCustomer($this->chatId);
             $this->fileHandler->saveState($this->chatId, "NULL");
@@ -183,11 +184,10 @@ class BotHandler
                 [['text' => '🔙 برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
 
-
-
-        if (str_starts_with($callbackData, 'customer_') ) {
-            $customerId = str_replace('customer_', '', $callbackData);
-            $customer = $this->db->getCustomersbyId($customerId);
+ 
+         if (str_starts_with($callbackData, 'customer_') ) {
+             $customerId = str_replace('customer_', '', $callbackData);
+             $customer = $this->db->getCustomersbyId($customerId);
 
             if ($customer) {
         
@@ -210,6 +210,8 @@ class BotHandler
                 'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
             ]);
         
+        
+
             return;
         }
 
