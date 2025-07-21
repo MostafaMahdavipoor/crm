@@ -159,7 +159,8 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
             }
             $keyboard[] = [
                 ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']
+                ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel'],
+                ['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_by_date']
             ];
 
             $this->sendRequest('editMessageText', [
