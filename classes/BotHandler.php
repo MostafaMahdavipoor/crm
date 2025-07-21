@@ -380,7 +380,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                 ],
                 [
                     ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
-                    ['text' => '🔙 ب↩️شت', 'callback_data' => 'back_number'],
+                    ['text' => '🔙 بازگشت', 'callback_data' => 'back_number'],
                 ]
             ];
 
@@ -426,7 +426,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                      [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
                      [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
                      [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
-                     [['text' => '🔙 ب↩️شت', 'callback_data' => 'back_email']],
+                     [['text' => '🔙 بازگشت', 'callback_data' => 'back_email']],
             ];
 
             $reply_markup = [
