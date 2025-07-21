@@ -237,7 +237,7 @@ class BotHandler
 
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
-                [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
+                [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'show_dates_panel']],
                 [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
                 [['text' => '🔙 برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
@@ -485,7 +485,7 @@ class BotHandler
         error_log("message Id: " . $messageId);
         $keyboard = [
             [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
-            [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
+            [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'show_dates_panel']],
             [['text' => '💬 یادداشت پیگیری', 'callback_data' => 'add_followup_note']],
             [['text' => '📞 ثبت تماس / جلسه', 'callback_data' => 'log_interaction']],
             [['text' => '🔔 یادآور پیگیری', 'callback_data' => 'set_reminder']],
