@@ -240,8 +240,8 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
                 [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
-                [['text' => '��لغو و بازگشت به منو', 'callback_data' => 'cancel']],
-                [['text' => '↩️برگشت به مرحله نام', 'callback_data' => 'back_name']],
+                [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
 
 
@@ -332,8 +332,8 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                 "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
 
             $keyboard = [
-                [['text' => '🔙🔙و و بازگشت به منو', 'callback_data' => 'cancel']],
-                [['text' => '🔙 ب↩️شت به مرحله نام', 'callback_data' => 'back_name']],
+                [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
 
             $reply_markup = [
