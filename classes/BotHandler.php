@@ -123,7 +123,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                 $text .= "نام: " . $customer['name'] . "\n";
                 $text .= "شماره تماس: " . $customer['phone'] . "\n";
                 $text .= " ایمیل کاربر: " . $customer['email'] . "\n";
-                $text .= "یادداشت: " . $customer['statuse'] . "\n";
+                $text .= "وضعیت مشتری: " . $customer['status'] . "\n";
             } else {
                 $text = "❗️ مشتری پیدا نشد.";
             }
