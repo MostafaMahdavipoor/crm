@@ -89,7 +89,7 @@ class BotHandler
 if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
             $text = "📝 لطفاً نام کامل مشتری را وارد کنید:";
         $keyboard = [
-            [['text' => '📝 برگشت', 'callback_data' => 'back']],
+            [['text' => '↩️ برگشت', 'callback_data' => 'back']],
         ];
         $this->fileHandler->saveMessageId($chatId, $messageId);
         $this->fileHandler->saveState($chatId, "witting_customer_creation_name");
@@ -131,7 +131,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
               $keyboard[] = [
 
                 ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🚫 بازگشت ', 'callback_data' => 'list_customers']
+                ['text' => '🔙 بازگشت ', 'callback_data' => 'list_customers']
             ];
             $this->sendRequest('editMessageText', [
                 'chat_id' => $chatId,
@@ -143,48 +143,21 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
             return;
         }
 
+    elseif($state == 'witting_customer_creation_name') {
+            $nameCustomer = $this->text;
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
+            $this->fileHandler->saveNameCustomer($this->chatId, $nameCustomer);
+            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
 
-        if (str_starts_with($callbackData, 'list_customers')) {
-            $customers = $this->db->getCustomers();
-            $keyboard = [];
-            if (empty($customers)) {
-                $text = "❗️ هیچ مشتری‌ای ثبت نشده است.";
-            } else {
-                $text = "📋 لیست مشتری‌ها:\n";
-                foreach ($customers as $customer) {
-                    $keyboard[] = [
-                        ['text' => $customer['name'], 'callback_data' => 'customer_' . $customer['id']]
-                    ];
-                }
-            }
-            $keyboard[] = [
-                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']
-            ];
-
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $chatId,
-                'message_id' => $messageId,
-                'text' => $text,
-                'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
-            ]);
-
-            return;
-        }
-         
-
-        
-        elseif (str_starts_with($callbackData, 'back_number')) {
-            $nameCustomer=$this->fileHandler->getNameCustomer($this->chatId);
-            $this->fileHandler->saveState($this->chatId, "NULL");
 
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
                 "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
                 "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
 
             $keyboard = [
-                [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
-                [['text' => '🔙 برگشت به مرحله نام', 'callback_data' => 'back_name']],
+                [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
 
             $reply_markup = [
@@ -198,8 +171,10 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
             ]);
+        }
 
-        } elseif (str_starts_with($callbackData, 'cold') || str_starts_with($callbackData, 'in_progress') || str_starts_with($callbackData, 'active_customer')) {
+
+         elseif (str_starts_with($callbackData, 'cold') || str_starts_with($callbackData, 'in_progress') || str_starts_with($callbackData, 'active_customer')) {
             $statusCustomer = $callbackData;
             $this->fileHandler->saveStatusCustomer($this->chatId, $statusCustomer);
 
@@ -219,8 +194,8 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
                 [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
-                [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
-                [['text' => '🔙 برگشت به مرحله نام', 'callback_data' => 'back_name']],
+                [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
 
 
@@ -241,8 +216,8 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
                 [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
-                [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
-                [['text' => '🔙 برگشت به مرحله نام', 'callback_data' => 'back_name']],
+                [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
 
 
@@ -264,7 +239,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
               $keyboard[] = [
 
                 ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🚫 بازگشت ', 'callback_data' => 'list_customers']
+                ['text' => '🔙 بازگشت ', 'callback_data' => 'list_customers']
             ];
             $this->sendRequest('editMessageText', [
                 'chat_id' => $chatId,
@@ -292,7 +267,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
             }
             $keyboard[] = [
                 ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']
+                ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']
             ];
 
             $this->sendRequest('editMessageText', [
@@ -349,42 +324,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
             $this->showMainMenu($this->chatId);
         }
 // از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
-
-
-
-
-        if ($state == 'witting_customer_creation_name') {
-            $nameCustomer = $this->text;
-            $messageId = $this->fileHandler->getMessageId($this->chatId);
-            $this->deleteMessageWithDelay();
-            $this->fileHandler->saveNameCustomer($this->chatId, $nameCustomer);
-            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
-
-
-            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
-                "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
-                "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
-
-            $keyboard = [
-                [['text' => '🚫 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
-                [['text' => '🔙 برگشت به مرحله نام', 'callback_data' => 'back_name']],
-            ];
-
-            $reply_markup = [
-                'inline_keyboard' => $keyboard
-            ];
-
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $this->chatId,
-                'text' => $text,
-                'message_id' => $messageId,
-                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
-                'parse_mode' => 'HTML'
-            ]);
-        }
-
-
-        if ($state == 'witting_customer_creation_number') {
+      if ($state == 'witting_customer_creation_number') {
 
             $numberCustomer = $this->text;
             if (!preg_match('/^09\d{9}$/', $numberCustomer)) {
@@ -414,7 +354,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                 ],
                 [
                     ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
-                    ['text' => '🔙 برگشت', 'callback_data' => 'back_number'],
+                    ['text' => '↩️ برگشت', 'callback_data' => 'back_number'],
                 ]
             ];
 
@@ -460,7 +400,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                      [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
                      [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
                      [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
-                     [['text' => '🔙 برگشت', 'callback_data' => 'back_email']],
+                     [['text' => '↩️ برگشت', 'callback_data' => 'back_email']],
             ];
 
             $reply_markup = [
