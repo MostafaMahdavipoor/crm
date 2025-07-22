@@ -174,10 +174,10 @@ if (str_starts_with($callbackData, 'list_customers')) {
     
     $paginationRow = [];
     if ($page > 1) {
-        $paginationRow[] = ['text' => '◀️ قبلی', 'callback_data' => 'list_customers_page_' . ($page - 1)];
+        $paginationRow[] = ['text' => '◀️ صفحه قبل ', 'callback_data' => 'list_customers_page_' . ($page - 1)];
     }
     if ($page < $totalPages) {
-        $paginationRow[] = ['text' => 'صفحه بعد ➡️', 'callback_data' => 'list_customers_page_' . ($page + 1)];
+        $paginationRow[] = ['text' => ' ▶️ صفحه بعد', 'callback_data' => 'list_customers_page_' . ($page + 1)];
     }
 
     if (!empty($paginationRow)) {
@@ -188,12 +188,8 @@ if (str_starts_with($callbackData, 'list_customers')) {
     ];
 
     $keyboard[] = [
-        ['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel'],
-        ['text' => '🔍 جستجوی مشتری', 'callback_data' => 'search_customer'] 
-    ];
-    
-    $keyboard[] = [
-        ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
+        ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
+        ['text' => '🔍 جستجوی مشتری', 'callback_data' => 'search_customer']
     ];
     $keyboard[] = [
         ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']
