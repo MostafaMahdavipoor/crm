@@ -230,6 +230,7 @@ class BotHandler
                 ['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel'],
                 ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
             ];
+            $keyboard[] = [['text' => 'جستجوی مشتریان', 'callback_data' => 'search_customers']];
             $keyboard[] = [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']];
 
             $this->sendRequest('editMessageText', [
