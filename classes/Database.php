@@ -365,10 +365,16 @@ public function getCustomersPaginated($offset, $limit) {
     return $customers;
 }
 
-public function getTotalCustomersCount() {
+public function getTotalCustomersCount($chatId) {
     $count = 0;
-    $stmt = $this->mysqli->prepare("SELECT COUNT(id) AS total_count FROM customers");
-    
+    $stmt = $this->mysqli->prepare("SELECT COUNT(id) AS total_count FROM customers WHERE chat_id = ?");
+    if (!$stmt) {
+        error_log("❌ Prepare failed for getTotalCustomersCount: " . $this->mysqli->error);
+        return 0;
+    }
+    $stmt->bind_param("i", $chatId);
+    $count = 0;
+    $stmt = $this->mysqli->prepare("SELECT COUNT(id) AS total_count FROM customers WHERE chat_id = ?");
     if (!$stmt) {
         error_log("❌ Prepare failed for getTotalCustomersCount: " . $this->mysqli->error);
         return 0;
