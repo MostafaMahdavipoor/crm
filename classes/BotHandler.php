@@ -491,7 +491,7 @@ if (str_starts_with($callbackData, 'list_customers')) {
         error_log("message Id: " . $messageId);
         $keyboard = [
             [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
-            [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
+            [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers_page_1']],
             [['text' => '💬 یادداشت پیگیری', 'callback_data' => 'add_followup_note']],
             [['text' => '📞 ثبت تماس / جلسه', 'callback_data' => 'log_interaction']],
             [['text' => '🔔 یادآور پیگیری', 'callback_data' => 'set_reminder']],
