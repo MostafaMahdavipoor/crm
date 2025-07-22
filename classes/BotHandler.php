@@ -217,13 +217,13 @@ class BotHandler
             $paginationRow = [];
             if ($page > 1) {
                 $paginationRow[] = ['text' => '⬅️ صفحه قبل', 'callback_data' => 'list_customers_page_' . ($page - 1)];
-            }
-            // Use 'ignore_page_info' to prevent callback queries on page number button
-            $paginationRow[] = ['text' => "{$page}/{$totalPages}", 'callback_data' => 'ignore_page_info']; 
+            } 
             if ($page < $totalPages) {
                 $paginationRow[] = ['text' => 'صفحه بعد ➡️', 'callback_data' => 'list_customers_page_' . ($page + 1)];
             }
-    
+            if (!empty($paginationRow)) {
+                $keyboard[] = $paginationRow;
+            }
 
             // Always present buttons at the bottom of the list
             $keyboard[] = [['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel']]; 
