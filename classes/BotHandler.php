@@ -223,9 +223,7 @@ class BotHandler
             if ($page < $totalPages) {
                 $paginationRow[] = ['text' => 'صفحه بعد ➡️', 'callback_data' => 'list_customers_page_' . ($page + 1)];
             }
-            if (!empty($paginationRow)) {
-                $keyboard[] = $paginationRow;
-            }
+    
 
             // Always present buttons at the bottom of the list
             $keyboard[] = [['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel']]; 
