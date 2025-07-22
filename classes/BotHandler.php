@@ -173,25 +173,25 @@ if (str_starts_with($callbackData, 'list_customers')) {
     }
     
     $paginationRow = [];
-    if ($page > 1) { 
-        $paginationRow[] = ['text' => '⬅️ صفحه قبل', 'callback_data' => 'list_customers_page_' . ($page - 1)];
+    if ($page > 1) {
+        $paginationRow[] = ['text' => '◀️ قبلی', 'callback_data' => 'list_customers_page_' . ($page - 1)];
     }
-   
-    $paginationRow[] = ['text' => "{$page}/{$totalPages}", 'callback_data' => 'current_page_info']; 
-    if ($page < $totalPages) { 
-        $paginationRow[] = ['text' => 'صفحه بعد ➡️', 'callback_data' => 'list_customers_page_1' . ($page + 1)];
+    if ($page < $totalPages) {
+        $paginationRow[] = ['text' => 'صفحه بعد ➡️', 'callback_data' => 'list_customers_page_' . ($page + 1)];
     }
-   
+
     if (!empty($paginationRow)) {
         $keyboard[] = $paginationRow;
     }
-
-   
-    $keyboard[] = [
-        ['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel'] // از 'show_dates_panel' استفاده کنید
+        $keyboard[] = [
+        ['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel'] 
     ];
 
-  
+    $keyboard[] = [
+        ['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel'],
+        ['text' => '🔍 جستجوی مشتری', 'callback_data' => 'search_customer'] 
+    ];
+    
     $keyboard[] = [
         ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
     ];
