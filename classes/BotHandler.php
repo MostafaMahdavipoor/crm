@@ -133,6 +133,9 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                 ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
                 ['text' => '🔙 بازگشت ', 'callback_data' => 'list_customers']
             ];
+                $keyboard[] = [
+        ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']
+    ];
             $this->sendRequest('editMessageText', [
                 'chat_id' => $chatId,
                 'message_id' => $messageId,
@@ -298,8 +301,8 @@ if (str_starts_with($callbackData, 'list_customers')) {
                 ['text' => '🔙 بازگشت ', 'callback_data' => 'list_customers']
             ];
                 $keyboard[] = [
-                ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']
-            ];
+        ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']
+    ];
             $this->sendRequest('editMessageText', [
                 'chat_id' => $chatId,
                 'message_id' => $messageId,
