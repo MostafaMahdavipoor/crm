@@ -373,7 +373,6 @@ public function getTotalCustomersCount() {
         error_log("❌ Prepare failed for getTotalCustomersCount: " . $this->mysqli->error);
         return 0;
     }
-    
     if (!$stmt->execute()) {
         error_log("❌ Execute failed for getTotalCustomersCount: " . $stmt->error);
         return 0;
