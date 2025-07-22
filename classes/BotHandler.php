@@ -226,8 +226,10 @@ class BotHandler
             }
 
             // Always present buttons at the bottom of the list
-            $keyboard[] = [['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel']]; 
-            $keyboard[] = [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']];
+            $keyboard[] = [
+                ['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel'],
+                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
+            ];
             $keyboard[] = [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']];
 
             $this->sendRequest('editMessageText', [
