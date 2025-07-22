@@ -340,7 +340,7 @@ class Database
 public function getCustomersPaginated($offset, $limit ,$chatId) {
     $customers = [];
 
-     $stmt = $this->mysqli->prepare("SELECT id, name, phone, email, status, created_at AS registration_date FROM customers WHERE chat_id = ? ORDER BY created_at DESC LIMIT ?, ?");
+     $stmt = $this->mysqli->prepare("SELECT id, name, phone, email, status, created_at AS registration_date FROM customers WHERE admin_chat_id = ? ORDER BY created_at DESC LIMIT ?, ?");
     if (!$stmt) {
         error_log("❌ Prepare failed for getCustomersPaginated: " . $this->mysqli->error);
         return [];
