@@ -254,6 +254,7 @@ class Database
         $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
     }
+    
 
     public function insertCustomer($adminChatId, $name, $phone, $email, $status, $note = null)
     {
@@ -335,22 +336,19 @@ class Database
            $stmt->close();
            return $dates;
     }
-    // در کلاس Database.php یا هر کلاسی که مدیریت دیتابیس را بر عهده دارد
-
-// تابع برای دریافت مشتریان یک صفحه خاص
-public function getCustomersPaginated($offset, $limit) {
+   
+public function getCustomersPaginated($offset, $limit ,$chatId) {
     $customers = [];
-    // مطمئن شوید که created_at وجود دارد و می‌توانید از آن برای مرتب‌سازی استفاده کنید
-    $stmt = $this->mysqli->prepare("SELECT id, name, phone, email, status, created_at AS registration_date FROM customers ORDER BY created_at DESC LIMIT ?, ?");
-    
+
+     $stmt = $this->mysqli->prepare("SELECT id, name, phone, email, status, created_at AS registration_date FROM customers WHERE chat_id = ? ORDER BY created_at DESC LIMIT ?, ?");
     if (!$stmt) {
         error_log("❌ Prepare failed for getCustomersPaginated: " . $this->mysqli->error);
         return [];
     }
-    
-    // 'ii' به این معنی است که هر دو پارامتر $offset و $limit اعداد صحیح (integer) هستند.
-    $stmt->bind_param("ii", $offset, $limit); 
-    
+
+
+    $stmt->bind_param("iii", $chatId, $offset, $limit);
+
     if (!$stmt->execute()) {
         error_log("❌ Execute failed for getCustomersPaginated: " . $stmt->error);
         return [];
@@ -373,6 +371,7 @@ public function getTotalCustomersCount() {
         error_log("❌ Prepare failed for getTotalCustomersCount: " . $this->mysqli->error);
         return 0;
     }
+     $stmt->bind_param("s", $chatId);
     
     if (!$stmt->execute()) {
         error_log("❌ Execute failed for getTotalCustomersCount: " . $stmt->error);
