@@ -86,6 +86,12 @@ class BotHandler
 
         // از اینجا به بعد، کدهای مربوط به مدیریت کالبک‌ها را اضافه می‌کنیم
 
+if ($this->text === '/start') {
+            $this->fileHandler->saveState($this->chatId, null);
+            $this->showMainMenu($this->chatId);
+        }
+
+        
 if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
             $text = "📝 لطفاً نام کامل مشتری را وارد کنید:";
         $keyboard = [
@@ -309,10 +315,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
         error_log("State: " . $state);
 
         
-if ($this->text === '/start') {
-            $this->fileHandler->saveState($this->chatId, null);
-            $this->showMainMenu($this->chatId);
-        }
+
 // از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
 
 
