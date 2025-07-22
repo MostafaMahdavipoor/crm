@@ -143,35 +143,71 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
             return;
         }
 
+if (str_starts_with($callbackData, 'list_customers')) {
+    $pageSize = 5;
+    $page = 1; 
+    
+    if (str_starts_with($callbackData, 'list_customers_page_')) {
+        $page = (int)str_replace('list_customers_page_', '', $callbackData);
+        if ($page < 1) $page = 1; 
+    }
+    
+    $offset = ($page - 1) * $pageSize; 
 
-        if (str_starts_with($callbackData, 'list_customers')) {
-            $customers = $this->db->getCustomers();
-            $keyboard = [];
-            if (empty($customers)) {
-                $text = "❗️ هیچ مشتری‌ای ثبت نشده است.";
-            } else {
-                $text = "📋 لیست مشتری‌ها:\n";
-                foreach ($customers as $customer) {
-                    $keyboard[] = [
-                        ['text' => $customer['name'], 'callback_data' => 'customer_' . $customer['id']]
-                    ];
-                }
-            }
+    $chatId = $callbackQuery['message']['chat']['id'];
+    $messageId = $callbackQuery['message']['message_id'];
+    $customers = $this->db->getCustomersPaginated($offset, $pageSize);
+    $totalCustomers = $this->db->getTotalCustomersCount(); 
+    $totalPages = ceil($totalCustomers / $pageSize);
+
+    $keyboard = [];
+    if (empty($customers)) {
+        $text = "❗️ هیچ مشتری‌ای ثبت نشده است.";
+    } else {
+        $text = "📋 لیست مشتری‌ها (صفحه {$page} از {$totalPages}):\n"; 
+        foreach ($customers as $customer) {
             $keyboard[] = [
-                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']
+                ['text' => $customer['name'], 'callback_data' => 'customer_' . $customer['id']]
             ];
-
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $chatId,
-                'message_id' => $messageId,
-                'text' => $text,
-                'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
-            ]);
-
-            return;
         }
-         
+    }
+    
+    $paginationRow = [];
+    if ($page > 1) { 
+        $paginationRow[] = ['text' => '⬅️ صفحه قبل', 'callback_data' => 'list_customers_page_' . ($page - 1)];
+    }
+   
+    $paginationRow[] = ['text' => "{$page}/{$totalPages}", 'callback_data' => 'current_page_info']; 
+    if ($page < $totalPages) { 
+        $paginationRow[] = ['text' => 'صفحه بعد ➡️', 'callback_data' => 'list_customers_page_1' . ($page + 1)];
+    }
+   
+    if (!empty($paginationRow)) {
+        $keyboard[] = $paginationRow;
+    }
+
+   
+    $keyboard[] = [
+        ['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel'] // از 'show_dates_panel' استفاده کنید
+    ];
+
+  
+    $keyboard[] = [
+        ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
+    ];
+    $keyboard[] = [
+        ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']
+    ];
+
+    $this->sendRequest('editMessageText', [
+        'chat_id' => $chatId,
+        'message_id' => $messageId,
+        'text' => $text,
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
+    ]);
+
+    return;
+}
 
         
         elseif (str_starts_with($callbackData, 'back_number')) {
@@ -217,7 +253,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
 
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
-                [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
+                [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers_page_1']],
                 [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
                 [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
@@ -239,7 +275,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
 
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
-                [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers']],
+                [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers_page_1']],
                 [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
                 [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
             ];
