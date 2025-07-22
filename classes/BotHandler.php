@@ -84,6 +84,10 @@ class BotHandler
             return;
         }
 
+                if ($this->text === '/start') {
+            $this->fileHandler->saveState($this->chatId, null);
+            $this->showMainMenu($this->chatId);
+        }
         // از اینجا به بعد، کدهای مربوط به مدیریت کالبک‌ها را اضافه می‌کنیم
 
 if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
@@ -157,13 +161,12 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
                     ];
                 }
             }
-             $keyboard[] = [
-                ['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_by_date']
+            $keyboard[] = [
+                ['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']
             ];
             $keyboard[] = [
                 ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel'],
-
+                ['text' => '🔙 بازگشت ', 'callback_data' => 'list_customers']
             ];
 
             $this->sendRequest('editMessageText', [
@@ -314,10 +317,7 @@ if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($call
 
         
 
-        if ($this->text === '/start') {
-            $this->fileHandler->saveState($this->chatId, null);
-            $this->showMainMenu($this->chatId);
-        }
+
 // از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
 
 
