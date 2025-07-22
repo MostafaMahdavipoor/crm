@@ -159,7 +159,7 @@ if (str_starts_with($callbackData, 'list_customers')) {
 
     $chatId = $callbackQuery['message']['chat']['id'];
     $messageId = $callbackQuery['message']['message_id'];
-    $customers = $this->db->getCustomersPaginated($offset, $pageSize);
+    $customers = $this->db->getCustomersPaginated($offset, $pageSize ,$ch);
     $totalCustomers = $this->db->getTotalCustomersCount(); 
     $totalPages = ceil($totalCustomers / $pageSize);
 
