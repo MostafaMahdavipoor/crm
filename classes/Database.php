@@ -199,6 +199,7 @@ class Database
 
     public function getUsersBatch($limit = 20, $offset = 0)
     {
+        $totalCustomers = $this->db->getTotalCustomersCount($admin_chatId);
         $query = "SELECT id, chat_id, username, first_name, last_name, join_date, last_activity, status, language, is_admin, entry_token 
               FROM users 
               ORDER BY id ASC 
@@ -363,15 +364,32 @@ public function getCustomersPaginated($offset, $limit ,$chatId) {
     return $customers;
 }
 
-public function getTotalCustomersCount() {
+public function getTotalCustomersCount($admin_chatId = null) { // حالا تابع یک پارامتر به نام $chatId دریافت می‌کند
     $count = 0;
-    $stmt = $this->mysqli->prepare("SELECT COUNT(id) AS total_count FROM customers");
+    $sql = "SELECT COUNT(id) AS total_count FROM customers";
+    $params = []; // آرایه‌ای برای نگهداری پارامترهایی که باید bind شوند
+    $types = "";  // رشته‌ای برای نگهداری انواع پارامترها (مثل "i" برای integer)
+
+    if ($admin_chatId !== null) { // اگر chat_id ارسال شده باشد (یعنی نال نباشد)
+        $sql .= " WHERE chat_id = ?"; // عبارت WHERE را با یک placeholder اضافه می‌کنیم
+        $params[] = $admin_chatId; // مقدار chat_id را به لیست پارامترها اضافه می‌کنیم
+        $types .= "i"; // نوع پارامتر را 'i' (integer) مشخص می‌کنیم، فرض می‌کنیم chat_id عدد صحیح است
+    }
+
+    $stmt = $this->mysqli->prepare($sql);
     
     if (!$stmt) {
         error_log("❌ Prepare failed for getTotalCustomersCount: " . $this->mysqli->error);
         return 0;
     }
-     $stmt->bind_param("s", $chatId);
+    
+    
+    if (!empty($params)) {
+        // این بخش برای bind کردن دینامیک پارامترها به یک prepared statement ضروری است
+        // تابع refValues را که قبلاً در پاسخ‌های قبلی آورده بودم، حتماً در همین کلاس داشته باشید.
+        $bindArgs = array_merge([$types], $params);
+        call_user_func_array([$stmt, 'bind_param'], $this->refValues($bindArgs));
+    }
     
     if (!$stmt->execute()) {
         error_log("❌ Execute failed for getTotalCustomersCount: " . $stmt->error);
@@ -386,6 +404,18 @@ public function getTotalCustomersCount() {
     return $count;
 }
 
+// **این تابع کمکی باید در کلاس Database.php شما وجود داشته باشد:**
+private function refValues($arr){
+    if (strnatcmp(phpversion(),'5.3') >= 0) {
+        $refs = [];
+        foreach($arr as $key => $value) {
+            $refs[$key] = &$arr[$key];
+        }
+        return $refs;
     }
+    return $arr;
+}
+
+}
 
 ?>

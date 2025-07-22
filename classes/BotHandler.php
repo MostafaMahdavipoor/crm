@@ -84,157 +84,165 @@ class BotHandler
             return;
         }
 
-        // از اینجا به بعد، کدهای مربوط به مدیریت کالبک‌ها را اضافه می‌کنیم
+      // از اینجا به بعد، کدهای مربوط به مدیریت کالبک‌ها را اضافه می‌کنیم
 
-if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
+        if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
             $text = "📝 لطفاً نام کامل مشتری را وارد کنید:";
-        $keyboard = [
-            [['text' => '↩️ برگشت', 'callback_data' => 'back']],
-        ];
-        $this->fileHandler->saveMessageId($chatId, $messageId);
-        $this->fileHandler->saveState($chatId, "witting_customer_creation_name");
+            $keyboard = [
+                [['text' => '↩️ برگشت', 'callback_data' => 'back']],
+            ];
+            $this->fileHandler->saveMessageId($chatId, $messageId);
+            $this->fileHandler->saveState($chatId, "witting_customer_creation_name");
 
-        $reply_markup = [
-            'inline_keyboard' => $keyboard
-        ];
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
 
-        $this->sendRequest('editMessageText', [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'message_id' => $messageId,
-            'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
-        ]);
-        }
-        elseif (str_starts_with($callbackData, 'back')) {
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+            ]);
+        } elseif (str_starts_with($callbackData, 'back')) {
             $this->showMainMenu($this->chatId, $messageId);
-        }
-        elseif (str_starts_with($callbackData, 'cancel')) {
+            $this->fileHandler->saveState($this->chatId, ""); // Reset state on returning to main menu
+        } elseif (str_starts_with($callbackData, 'cancel')) {
             $this->fileHandler->saveState($this->chatId, "");
             $this->showMainMenu($this->chatId, $messageId);
+        } elseif (str_starts_with($callbackData, 'customer_') && !str_contains($callbackData, 'creation')) { // Ensure it's not 'customer_creation'
+            $customerId = str_replace('customer_', '', $callbackData);
+            $customer = $this->db->getCustomersbyId($customerId);
 
-        } 
-elseif (str_starts_with($callbackData, 'customer_') ) {
-    $customerId = str_replace('customer_', '', $callbackData);
-    $customer = $this->db->getCustomersbyId($customerId);
-
-    if ($customer) {
-        $text = "📋 اطلاعات مشتری:\n";
-        $text .= "نام: " . $customer['name'] . "\n";
-        $text .= "شماره تماس: " . $customer['phone'] . "\n";
-        $text .= " ایمیل کاربر: " . $customer['email'] . "\n";
-        $text .= "وضعیت مشتری: " . $customer['status'] . "\n";
-    } else {
-        $text = "❗️ مشتری پیدا نشد.";
-    }
-    
-  
-    $keyboard = []; 
-    $keyboard[] = [
-        ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
-    ];
-    
-   $keyboard[] = [
-        ['text' => '🔙 بازگشت به لیست مشتریان', 'callback_data' => 'list_customers_page_1'] 
-    ];
-
-   
-    $keyboard[] = [
-        ['text' => '❌ لغو و بازگشت به منو', 'callback_data' => 'cancel'] // Changed emoji for clarity
-    ];
-
-    $this->sendRequest('editMessageText', [
-        'chat_id' => $chatId,
-        'message_id' => $messageId,
-        'text' => $text,
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
-    ]);
-    
-    return;
-
-}elseif (str_starts_with($callbackData, 'show_dates_panel')) { // Correctly uses str_starts_with, but an exact match is fine too if it's always 'show_dates_panel'
-    $text = "📅 لطفاً تاریخ مورد نظر را انتخاب کنید:";
-    $keyboard = [
-        [['text' => 'امروز', 'callback_data' => 'show_today']],
-        [['text' => 'هفته جاری', 'callback_data' => 'show_current_week']],
-        [['text' => 'ماه جاری', 'callback_data' => 'show_current_month']],
-        [['text' => 'سال جاری', 'callback_data' => 'show_current_year']],
-        [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']] // Consistent 'cancel'
-    ];
-    $this->sendRequest('editMessageText', [
-        'chat_id' => $chatId,
-        'message_id' => $messageId,
-        'text' => $text,
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
-    ]);
-    return;
-}
-        
-elseif (str_starts_with($callbackData, 'list_customers')) {
-    $pageSize = 5;
-    
-    // Initialize $page to 1. This is crucial for when $callbackData is just 'list_customers'.
-    $page = 1; 
-
-    if (str_starts_with($callbackData, 'list_customers_page_')) {
-        $page = (int)str_replace('list_customers_page_', '', $callbackData);
-        if ($page < 1) $page = 1; // Ensure page number is at least 1
-    }
-    
-    $offset = ($page - 1) * $pageSize;
-
-    // Make sure $chatId is available in this scope (e.g., from $update->callback_query->message->chat->id)
-    // and your Database methods are correctly named:
-    $customers = $this->db->getCustomersPaginated($offset, $pageSize, $chatId);
-    $totalCustomers = $this->db->getTotalCustomersCount($chatId);
-    $totalPages = ceil($totalCustomers / $pageSize);
-
-    $keyboard = [];
-    if (empty($customers)) {
-        $text = "❗️ شما هیچ مشتری‌ای ثبت نکرده‌اید."; // User-specific message
-    } else {
-        $text = "📋 لیست مشتریان شما (صفحه {$page} از {$totalPages}):\n"; // Show page info
-        foreach ($customers as $customer) {
+            if ($customer) {
+                $text = "📋 اطلاعات مشتری:\n";
+                $text .= "نام: " . ($customer['name'] ?? 'N/A') . "\n";
+                $text .= "شماره تماس: " . ($customer['phone'] ?? 'N/A') . "\n";
+                $text .= "ایمیل کاربر: " . ($customer['email'] ?? 'N/A') . "\n";
+                // Assuming the database column is 'status', not 'statuse'
+                $text .= "وضعیت مشتری: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n"; 
+                $text .= "یادداشت: " . ($customer['note'] ?? 'ندارد') . "\n"; // If a 'note' field exists
+            } else {
+                $text = "❗️ مشتری پیدا نشد.";
+            }
+            
+            $keyboard = []; 
             $keyboard[] = [
-                ['text' => $customer['name'], 'callback_data' => 'customer_' . $customer['id']]
+                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
             ];
-        }
-    }
-    
+            $keyboard[] = [
+                ['text' => '🔙 بازگشت به لیست مشتریان', 'callback_data' => 'list_customers_page_1'] 
+            ];
+            $keyboard[] = [
+                ['text' => '❌ لغو و بازگشت به منو', 'callback_data' => 'cancel']
+            ];
 
-    $paginationRow = [];
-    if ($page > 1) {
-        $paginationRow[] = ['text' => '⬅️ صفحه قبل', 'callback_data' => 'list_customers_page_' . ($page - 1)];
-    }
-    $paginationRow[] = ['text' => "{$page}/{$totalPages}", 'callback_data' => 'current_page_info']; 
-    if ($page < $totalPages) {
-        $paginationRow[] = ['text' => 'صفحه بعد ➡️', 'callback_data' => 'list_customers_page_' . ($page + 1)];
-    }
-    if (!empty($paginationRow)) {
-        $keyboard[] = $paginationRow;
-    }
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'HTML'
+            ]);
+            
+            return;
+        } elseif (str_starts_with($callbackData, 'show_dates_panel')) {
+            $text = "📅 لطفاً تاریخ مورد نظر را انتخاب کنید:";
+            // You might want to fetch unique dates from your database here based on $chatId
+            $uniqueDates = $this->db->getUniqueCustomerRegistrationDates($chatId); 
+            $keyboard = [];
+            foreach ($uniqueDates as $date) {
+                $keyboard[] = [['text' => $date, 'callback_data' => 'filter_date_' . $date]];
+            }
+            $keyboard[] = [['text' => '🔙 بازگشت به لیست مشتریان', 'callback_data' => 'list_customers_page_1']];
+            $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']]; 
+            
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+            ]);
+            return;
+        } elseif (str_starts_with($callbackData, 'filter_date_')) {
+            $selectedDate = str_replace('filter_date_', '', $callbackData);
+            $customersByDate = $this->db->getCustomersByDate($chatId, $selectedDate); 
+            
+            $text = "📋 مشتریان ثبت شده در تاریخ {$selectedDate}:\n";
+            $keyboard = [];
+            if (empty($customersByDate)) {
+                $text .= "هیچ مشتری در این تاریخ ثبت نشده است.";
+            } else {
+                foreach ($customersByDate as $customer) {
+                    $keyboard[] = [['text' => $customer['name'] . " (" . $this->getStatusText($customer['status']) . ")", 'callback_data' => 'customer_' . $customer['id']]];
+                }
+            }
+            $keyboard[] = [['text' => '🔙 بازگشت به پنل تاریخ‌ها', 'callback_data' => 'show_dates_panel']];
+            $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
 
-    $keyboard = [
-        ['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel'] 
-    ];
-    $keyboard = [
-        ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
-    ];
-    $keyboard = [
-        ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']
-    ];
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+            ]);
+            return;
+        } elseif (str_starts_with($callbackData, 'list_customers')) {
+            $pageSize = 5;
+            $page = 1; 
 
-    $this->sendRequest('editMessageText', [
-        'chat_id' => $chatId,
-        'message_id' => $messageId,
-        'text' => $text,
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
-    ]);
+            if (str_starts_with($callbackData, 'list_customers_page_')) {
+                $page = (int)str_replace('list_customers_page_', '', $callbackData);
+                if ($page < 1) $page = 1; 
+            }
+            
+            $offset = ($page - 1) * $pageSize;
 
-    return;
-}
-        elseif (str_starts_with($callbackData, 'back_number')) {
-            $nameCustomer=$this->fileHandler->getNameCustomer($this->chatId);
-            $this->fileHandler->saveState($this->chatId, "NULL");
+            $customers = $this->db->getCustomersPaginated($offset, $pageSize, $chatId);
+            $totalCustomers = $this->db->getTotalCustomersCount($chatId);
+            $totalPages = ceil($totalCustomers / $pageSize);
+
+            $keyboard = [];
+            if (empty($customers)) {
+                $text = "❗️ شما هیچ مشتری‌ای ثبت نکرده‌اید."; 
+            } else {
+                $text = "📋 لیست مشتریان شما (صفحه {$page} از {$totalPages}):\n"; 
+                foreach ($customers as $customer) {
+                    $keyboard[] = [
+                        ['text' => $customer['name'] . " (" . $this->getStatusText($customer['status']) . ")", 'callback_data' => 'customer_' . $customer['id']]
+                    ];
+                }
+            }
+            
+            $paginationRow = [];
+            if ($page > 1) {
+                $paginationRow[] = ['text' => '⬅️ صفحه قبل', 'callback_data' => 'list_customers_page_' . ($page - 1)];
+            }
+            // Use 'ignore_page_info' to prevent callback queries on page number button
+            $paginationRow[] = ['text' => "{$page}/{$totalPages}", 'callback_data' => 'ignore_page_info']; 
+            if ($page < $totalPages) {
+                $paginationRow[] = ['text' => 'صفحه بعد ➡️', 'callback_data' => 'list_customers_page_' . ($page + 1)];
+            }
+            if (!empty($paginationRow)) {
+                $keyboard[] = $paginationRow;
+            }
+
+            // Always present buttons at the bottom of the list
+            $keyboard[] = [['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel']]; 
+            $keyboard[] = [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']];
+            $keyboard[] = [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+            ]);
+
+            return;
+        } elseif (str_starts_with($callbackData, 'back_number')) {
+            $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
+            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number"); // Set state to allow re-entering number
 
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
                 "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
@@ -256,6 +264,34 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
             ]);
+        } elseif (str_starts_with($callbackData, 'back_email')) {
+            $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
+            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
+
+            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
+                     "\n<blockquote dir='rtl'>  شماره تماس: $numberCustomer</blockquote>" .
+                     "📞 لطفاً ایمیل مشتری جدید را وارد کنید:\n" .
+                     "🔑 ایمیل برای ارتباط با مشتری کاربردی است. لطفاً ایمیل را با دقت وارد کنید.";
+
+            $keyboard = [
+                [['text' => '✉️ رد کردن مرحله ایمیل', 'callback_data' => 'skip_email']],
+                [['text' => '🚫 کنسل', 'callback_data' => 'cancel']],
+                [['text' => '🔙 بازگشت', 'callback_data' => 'back_number']], // Changed to back to number
+            ];
+
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'HTML'
+            ]);
+            return;
         } elseif (str_starts_with($callbackData, 'cold') || str_starts_with($callbackData, 'in_progress') || str_starts_with($callbackData, 'active_customer')) {
             $statusCustomer = $callbackData;
             $this->fileHandler->saveStatusCustomer($this->chatId, $statusCustomer);
@@ -263,14 +299,19 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
             $name = $this->fileHandler->getNameCustomer($this->chatId);
             $phone = $this->fileHandler->getPhoneCustomer($this->chatId);
             $email = $this->fileHandler->getEmailCustomer($this->chatId);
-            $note = $this->fileHandler->getNoteCustomer($this->chatId);
+            $note = $this->fileHandler->getNoteCustomer($this->chatId); 
 
-            $result = $this->db->insertCustomer($this->chatId, $name, $phone, $email, $statusCustomer, $note);
+            // Handle skipped email: convert 'skipped_email' placeholder to empty string for DB
+            $emailToSave = ($email === 'skipped_email') ? '' : $email;
+
+            $result = $this->db->insertCustomer($this->chatId, $name, $phone, $emailToSave, $statusCustomer, $note);
 
             if ($result) {
                 $text = "✅ ثبت مشتری با موفقیت انجام شد!";
+                $this->fileHandler->clearCustomerCreationData($this->chatId); // Clear temp data after successful creation
+                $this->fileHandler->saveState($this->chatId, ""); // Reset state
             } else {
-                $text = "❗ این شماره قبلاً ثبت شده است.";
+                $text = "❗ این شماره قبلاً ثبت شده است یا خطایی در ثبت مشتری رخ داد.";
             }
 
             $keyboard = [
@@ -292,50 +333,28 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
         } elseif (str_starts_with($callbackData, 'skip_email')) {
-            $this->fileHandler->saveState($this->chatId, "completed");
-            $text = "✅ ثبت مشتری با موفقیت انجام شد!";
+            $this->fileHandler->saveEmailCustomer($this->chatId, "skipped_email"); // Mark email as skipped
+            $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status"); // Move to next step: status selection
+
+            $name = $this->fileHandler->getNameCustomer($this->chatId);
+            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $emailCustomer = "رد شد"; // Display text for skipped email
+
+            $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
+                     "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
+                     "\n<blockquote dir='rtl'>ایمیل: $emailCustomer</blockquote>" .
+                     "لطفاً وضعیت مشتری را انتخاب کنید:\n" .
+                     " وضعیت مشتری می‌تواند یکی از گزینه‌های زیر باشد:";
 
             $keyboard = [
-                [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
-                [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers_page_1']],
-                [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
-                [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
+                [['text' => '❄️ سرد', 'callback_data' => 'cold']],
+                [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
+                [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
+                [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
+                [['text' => '🔙 بازگشت', 'callback_data' => 'back_number']], // Go back to number entry
             ];
 
-
-
-        if (str_starts_with($callbackData, 'customer_') ) {
-            $customerId = str_replace('customer_', '', $callbackData);
-            $customer = $this->db->getCustomersbyId($customerId);
-
-            if ($customer) {
-        
-                $text = "📋 اطلاعات مشتری:\n";
-                $text .= "نام: " . $customer['name'] . "\n";
-                $text .= "شماره تماس: " . $customer['phone'] . "\n";
-                $text .= " ایمیل کاربر: " . $customer['email'] . "\n";
-                $text .= "یادداشت: " . $customer['statuse'] . "\n";
-            } else {
-                $text = "❗️ مشتری پیدا نشد.";
-            }
-              $keyboard[] = [
-
-                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation'],
-                ['text' => '🔙 بازگشت ', 'callback_data' => 'list_customers']
-            ];
-                $keyboard[] = [
-        ['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']
-    ];
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $chatId,
-                'message_id' => $messageId,
-                'text' => $text,
-                'reply_markup' => json_encode(['inline_keyboard' => $keyboard])
-            ]);
-        
-            return;
-        }
-  $reply_markup = [
+            $reply_markup = [
                 'inline_keyboard' => $keyboard
             ];
 
@@ -343,7 +362,8 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
                 'chat_id' => $this->chatId,
                 'text' => $text,
                 'message_id' => $messageId,
-                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'HTML'
             ]);
         }
     }
@@ -368,12 +388,10 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
     {
         $state = $this->fileHandler->getState($this->chatId);
         error_log("State: " . $state);
-
-        
-
         if ($this->text === '/start') {
             $this->fileHandler->saveState($this->chatId, null);
             $this->showMainMenu($this->chatId);
+            return; // Added return
         }
 // از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
 
@@ -408,6 +426,7 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
             ]);
+            return; // Added return
         }
 
 
@@ -429,8 +448,8 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
             $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
 
             $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
-                "\n<blockquote dir='rtl'>  شماره تماس: $numberCustomer</blockquote>" .
-                "📞 لطفاًایمیل مشتری جدید را وارد کنید:\n" .
+                "\n<blockquote dir='rtl'> شماره تماس: $numberCustomer</blockquote>" .
+                "📞 لطفاً ایمیل مشتری جدید را وارد کنید:\n" .
                 "🔑 ایمیل برای ارتباط با مشتری کاربردی است. لطفاً ایمیل را با دقت وارد کنید.";
 
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
@@ -441,7 +460,7 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
                 ],
                 [
                     ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
-                    ['text' => '🔙 بازگشت', 'callback_data' => 'back_number'],
+                    ['text' => '🔙 بازگشت', 'callback_data' => 'back_name'], // Changed to back_name
                 ]
             ];
 
@@ -456,55 +475,55 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
             ]);
+            return; // Added return
         }
-         //email
-            if ($state == 'witting_customer_creation_email') {
-              $emailCustomer = $this->text;
-              
-               if (!filter_var($emailCustomer, FILTER_VALIDATE_EMAIL)) {
-                    $this->sendRequest('sendMessage', [
-                        'chat_id' => $this->chatId,
-                        'text' => "❌ ایمیل وارد شده معتبر نیست. لطفاً یک ایمیل صحیح وارد کنید.",
-                    ]);
-                    return;
-                }
+        
+        if ($state == 'witting_customer_creation_email') {
+            $emailCustomer = $this->text;
+            
+            if (!filter_var($emailCustomer, FILTER_VALIDATE_EMAIL)) {
+                $this->sendRequest('sendMessage', [
+                    'chat_id' => $this->chatId,
+                    'text' => "❌ ایمیل وارد شده معتبر نیست. لطفاً یک ایمیل صحیح وارد کنید.",
+                ]);
+                return;
+            }
 
-                $messageId = $this->fileHandler->getMessageId($this->chatId);
-                $this->deleteMessageWithDelay();
-                $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
+            $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
 
-                $name = $this->fileHandler->getNameCustomer($this->chatId);
-                $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $name = $this->fileHandler->getNameCustomer($this->chatId);
+            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
 
-                $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
-                 "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
-                 "\n<blockquote dir='rtl'>ایمیل: $emailCustomer</blockquote>" .
-                 "لطفاً وضعیت مشتری را انتخاب کنید:\n" .
-                 " وضعیت مشتری می‌تواند یکی از گزینه‌های زیر باشد:";
+            $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
+                     "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
+                     "\n<blockquote dir='rtl'>ایمیل: $emailCustomer</blockquote>" .
+                     "لطفاً وضعیت مشتری را انتخاب کنید:\n" .
+                     " وضعیت مشتری می‌تواند یکی از گزینه‌های زیر باشد:";
 
-                 $keyboard = [
-                     [['text' => '❄️ سرد', 'callback_data' => 'cold']],
-                     [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
-                     [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
-                     [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
-                     [['text' => '🔙 بازگشت', 'callback_data' => 'back_email']],
+            $keyboard = [
+                [['text' => '❄️ سرد', 'callback_data' => 'cold']],
+                [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
+                [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
+                [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
+                [['text' => '🔙 بازگشت', 'callback_data' => 'back_email']],
             ];
 
             $reply_markup = [
                 'inline_keyboard' => $keyboard
             ];
 
-                     $this->sendRequest('editMessageText', [
-                    'chat_id' => $this->chatId,
-                    'text' => $text,
-                    'message_id' => $messageId,
-                    'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
-                    'parse_mode' => 'HTML'
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'HTML'
             ]);
-            $this->fileHandler->saveState($this->chatId, null);
+            $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status"); // Set state to indicate waiting for status
+            return; // Added return
         }
-
-
     }
 
 
@@ -520,7 +539,6 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
             [['text' => '🔔 یادآور پیگیری', 'callback_data' => 'set_reminder']],
             [['text' => '📊 گزارش عملکرد', 'callback_data' => 'show_report']],
             [['text' => '⚙️ تنظیمات', 'callback_data' => 'settings_menu']],
-            [['text' => '⚙️ تستت', 'callback_data' => 'settings_menu']],
         ];
 
         $reply_markup = [
@@ -558,6 +576,7 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
         curl_close($ch);
         $this->logTelegramRequest($method, $data, $response, $httpCode, $curlError);
         if ($curlError) {
+            error_log("cURL Error for method {$method}: {$curlError}");
             return false;
         }
         if ($httpCode >= 200 && $httpCode < 300) {
@@ -565,6 +584,7 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
         } else {
             $errorResponse = json_decode($response, true);
             $errorMessage = $errorResponse['description'] ?? 'Unknown error';
+            error_log("Telegram API Error for method {$method}: HTTP {$httpCode} - {$errorMessage}. Response: " . $response);
             return false;
         }
     }
@@ -579,13 +599,10 @@ elseif (str_starts_with($callbackData, 'list_customers')) {
             'http_code' => $httpCode,
             'curl_error' => $curlError
         ];
-        $logMessage = json_encode($logData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        // This is a placeholder for actual logging. You might want to write to a file or a database.
+        // For example:
+        // file_put_contents('telegram_api.log', json_encode($logData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . ",\n", FILE_APPEND);
     }
-
-
-
-
-
 
 
 
