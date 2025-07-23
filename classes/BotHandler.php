@@ -205,8 +205,8 @@ class BotHandler
     $keyboard[] = [['text' => ' هفته گذشته', 'callback_data' => 'filter_date_last_week'],
                    ['text' => ' ماه گذشته', 'callback_data' => 'filter_date_last_month']];
     $keyboard[] = [['text' => '🔙 بازگشت به لیست مشتریان', 'callback_data' => 'list_customers_page_1']];
-    $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']]; 
-    
+    $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
+    $keyboard[] = [['text' => 'انتخاب تاریخ خاص', 'callback_data' => 'select_date']];
     $this->sendRequest('editMessageText', [
         'chat_id' => $chatId,
         'message_id' => $messageId,
