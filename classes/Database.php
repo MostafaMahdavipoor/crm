@@ -328,15 +328,14 @@ class Database
         return $customer;
     }
 
-    // این تابع تاریخ‌های ثبت مشتریان را بدون فیلتر ادمین برمی‌گرداند.
-    // اگر نیاز دارید تاریخ‌های هر ادمین جداگانه باشد، باید `adminChatId` را به عنوان پارامتر اضافه کنید.
-    public function getUniqueCustomerRegistrationDates(){
+   public function getUniqueCustomerRegistrationDates($adminChatId){
         $dates = [];
-        $stmt = $this->mysqli->prepare("SELECT DISTINCT DATE(created_at) as registration_date FROM customers ORDER BY registration_date DESC");
+        $stmt = $this->mysqli->prepare("SELECT DISTINCT DATE(created_at) as registration_date FROM customers WHERE admin_chat_id = ? ORDER BY registration_date DESC");
         if (!$stmt) {
             error_log("❌ Prepare failed for getUniqueCustomerRegistrationDates: " . $this->mysqli->error);
             return [];
         }
+        $stmt->bind_param("i", $adminChatId);
         if (!$stmt->execute()) {
             error_log("❌ Execute failed for getUniqueCustomerRegistrationDates: " . $stmt->error);
             return [];
@@ -377,7 +376,6 @@ class Database
         $types = ""; 
 
         if ($adminChatId !== null) { 
-            // Corrected: Using 'admin_chat_id' column name
             $sql .= " WHERE admin_chat_id = ?"; 
             $params[] = $adminChatId; 
             $types .= "i"; 
@@ -438,6 +436,64 @@ class Database
             return $result->fetch_all(MYSQLI_ASSOC);
         } catch (Exception $e) {
             error_log("Error fetching customers by date: " . $e->getMessage());
+            return [];
+        } finally {
+            if (isset($stmt)) {
+                $stmt->close();
+            }
+        }
+    }
+     public function getCustomersToday(int $adminChatId): array
+    {
+        $today = date('Y-m-d');
+        return $this->getCustomersByDate($adminChatId, $today);
+    }
+     public function getCustomersYesterday(int $adminChatId): array
+    {
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+        return $this->getCustomersByDate($adminChatId, $yesterday);
+    }
+     public function getCustomersLastWeek(int $adminChatId): array
+    {
+        $customers = [];
+        try {
+            $stmt = $this->mysqli->prepare(
+                "SELECT * FROM customers WHERE admin_chat_id = ? AND created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) ORDER BY created_at DESC"
+            );
+            if (!$stmt) {
+                error_log("❌ Prepare failed for getCustomersLastWeek: " . $this->mysqli->error);
+                return [];
+            }
+            $stmt->bind_param("i", $adminChatId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error fetching customers for last week: " . $e->getMessage());
+            return [];
+        } finally {
+            if (isset($stmt)) {
+                $stmt->close();
+            }
+        }
+    }
+  public function getCustomersLastMonth(int $adminChatId): array
+    {
+        $customers = [];
+        try {
+            $stmt = $this->mysqli->prepare(
+                "SELECT * FROM customers WHERE admin_chat_id = ? AND created_at >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH) ORDER BY created_at DESC"
+            );
+            if (!$stmt) {
+                error_log("❌ Prepare failed for getCustomersLastMonth: " . $this->mysqli->error);
+                return [];
+            }
+            $stmt->bind_param("i", $adminChatId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error fetching customers for last month: " . $e->getMessage());
             return [];
         } finally {
             if (isset($stmt)) {
