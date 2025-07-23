@@ -199,11 +199,7 @@ class BotHandler
 } elseif (str_starts_with($callbackData, 'show_dates_panel')) {
     $text = "📅 لطفاً تاریخ مورد نظر را انتخاب کنید:";
     $uniqueDates = $this->db->getUniqueCustomerRegistrationDates($chatId); // حالا این تابع adminChatId را می‌پذیرد
-    $keyboard = [];
-    foreach ($uniqueDates as $date) {
-        $keyboard[] = [['text' => $date, 'callback_data' => 'filter_date_' . $date]];
-    }
-   
+  
     $keyboard[] = [['text' => '📅 امروز', 'callback_data' => 'filter_date_today']];
     $keyboard[] = [['text' => '📅 دیروز', 'callback_data' => 'filter_date_yesterday']];
     $keyboard[] = [['text' => '📅 هفته گذشته', 'callback_data' => 'filter_date_last_week']];
