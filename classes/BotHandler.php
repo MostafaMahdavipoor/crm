@@ -176,21 +176,7 @@ class BotHandler
             $filterText = $selectedDate;
             break;
     }
-    
-    if ($callbackData === 'select_date') {
-    $this->fileHandler->setUserState($this->chatId, 'awaiting_start_date');
-    $this->sendMessage("📅 لطفاً تاریخ شروع را وارد کنید (مثال: 1402/12/01)");
-}
-    $keyboard[] = [['text' => '🔙 بازگشت به پنل تاریخ‌ها', 'callback_data' => 'show_dates_panel']];
-    $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
 
-    $this->sendRequest('editMessageText', [
-        'chat_id' => $chatId,
-        'message_id' => $messageId,
-        'text' => $text,
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-    ]);
-    return;
 } elseif (str_starts_with($callbackData, 'show_dates_panel')) {
     $text = "📅 لطفاً تاریخ مورد نظر را انتخاب کنید:";
     $uniqueDates = $this->db->getUniqueCustomerRegistrationDates($chatId); // حالا این تابع adminChatId را می‌پذیرد
