@@ -177,6 +177,11 @@ class BotHandler
             break;
     }
     
+    if ($callbackData === 'select_date') {
+    $this->fileHandler->setUserState($this->chatId, 'awaiting_start_date');
+    $this->sendMessage("📅 لطفاً تاریخ شروع را وارد کنید (مثال: 1402/12/01)");
+}
+
     $text = "📋 مشتریان ثبت شده در تاریخ {$filterText}:\n";
     $keyboard = [];
     if (empty($customersByDate)) {
@@ -214,7 +219,47 @@ class BotHandler
         'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
     ]);
     return;
-  } elseif (str_starts_with($callbackData, 'filter_date_')) {
+  }
+elseif(str_starts_with($callbackData, 'select_date')) {
+  $this->fileHandler->saveState($this->chatId, 'awaiting_start_date');
+    $text = "📅 لطفاً تاریخ شروع را وارد کنید (مثلاً 1403/01/01):\n" .
+            "🗓 اطلاعات بین این تاریخ و تاریخ پایان برای شما نمایش داده خواهد شد.";
+    $keyboard = [
+        [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']]
+    ];
+    $this->sendRequest('editMessageText', [
+        'chat_id' => $this->chatId,
+        'message_id' => $messageId,
+        'text' => $text,
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE),
+        'parse_mode' => 'HTML'
+    ]);
+} elseif (str_starts_with($callbackData, 'back_number')) {
+    $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
+    $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number"); // Set state to allow re-entering number
+
+            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
+                "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
+                "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
+
+            $keyboard = [
+                [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
+            ];
+
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'HTML'
+            ]);
+        } 
+   elseif (str_starts_with($callbackData, 'filter_date_')) {
             $selectedDate = str_replace('filter_date_', '', $callbackData);
             $customersByDate = $this->db->getCustomersByDate($chatId, $selectedDate);
          $text = "📋 مشتریان ثبت شده در تاریخ {$selectedDate}:\n";
@@ -448,9 +493,10 @@ class BotHandler
             $this->showMainMenu($this->chatId);
             return; // Added return
         }
+
+
+        
 // از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
-
-
 
 
         if ($state == 'witting_customer_creation_name') {
