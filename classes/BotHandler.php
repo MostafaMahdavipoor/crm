@@ -119,7 +119,6 @@ class BotHandler
                 $text .= "نام: " . ($customer['name'] ?? 'N/A') . "\n";
                 $text .= "شماره تماس: " . ($customer['phone'] ?? 'N/A') . "\n";
                 $text .= "ایمیل کاربر: " . ($customer['email'] ?? 'N/A') . "\n";
-                // Assuming the database column is 'status', not 'statuse'
                 $text .= "وضعیت مشتری: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n"; 
                 $text .= "یادداشت: " . ($customer['note'] ?? 'ندارد') . "\n"; // If a 'note' field exists
             } else {
@@ -176,7 +175,22 @@ class BotHandler
             $filterText = $selectedDate;
             break;
     }
-    
+
+} elseif(str_starts_with($callbackData, 'select_date')) {
+  $this->fileHandler->saveState($this->chatId, 'awaiting_start_date');
+    $text = "📅 لطفاً تاریخ شروع را وارد کنید (مثلاً 1403/01/01):\n" .
+            "🗓 اطلاعات بین این تاریخ و تاریخ پایان برای شما نمایش داده خواهد شد.";
+    $keyboard = [
+        [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']]
+    ];
+    $this->sendRequest('editMessageText', [
+        'chat_id' => $this->chatId,
+        'message_id' => $messageId,
+        'text' => $text,
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE),
+        'parse_mode' => 'HTML'
+    ]);
+
 } elseif (str_starts_with($callbackData, 'show_dates_panel')) {
     $text = "📅 لطفاً تاریخ مورد نظر را انتخاب کنید:";
     $uniqueDates = $this->db->getUniqueCustomerRegistrationDates($chatId); // حالا این تابع adminChatId را می‌پذیرد
