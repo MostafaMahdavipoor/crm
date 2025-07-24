@@ -681,25 +681,6 @@ if ($state === 'awaiting_start_date') {
         }
     }
 
-private function isValidJalaliDate($date)
-{
-    $parts = explode('/', str_replace('۰', '0', $date));
-    return count($parts) === 3 && jdf::checkdate($parts[1], $parts[2], $parts[0]);
-}
-
-private function jalaliToTimestamp($date, $isStartOfDay = true)
-{
-    $parts = explode('/', str_replace('۰', '0', $date));
-    return jdf::jmktime(
-        $isStartOfDay ? 0 : 23,
-        $isStartOfDay ? 0 : 59,
-        $isStartOfDay ? 0 : 59,
-        $parts[1],
-        $parts[2],
-        $parts[0]
-    );
-}
-
     private function showMainMenu($chatId, $messageId = null): void
     {
         $text = "👋 به سیستم مدیریت مشتری خوش اومدی!\nاز منوی زیر یکی از گزینه‌ها رو انتخاب کن:";
