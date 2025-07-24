@@ -497,35 +497,7 @@ class BotHandler
 
         
 // از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
-        
-if ($state === 'awaiting_end_date') {
-    if ($this->isValidJalaliDate($this->text)) {
-        $startDate = $this->fileHandler->getUserData($this->chatId, 'start_date');
-        $endDate = $this->text;
 
-        $startTimestamp = $this->jalaliToTimestamp($startDate, true);
-        $endTimestamp = $this->jalaliToTimestamp($endDate, false);
-
-        $results = $this->db->getItemsBetweenTimestamps($startTimestamp, $endTimestamp);
-        $this->deleteMessageWithDelay();
-
-        if (!empty($results)) {
-            $text = "📊 موارد یافت‌شده بین تاریخ‌های انتخابی:\n\n";
-            foreach ($results as $row) {
-                $text .= "✅ " . $row['title'] . "\n";
-                $text .= "🗓 " . jdf::jdate('Y/m/d', $row['timestamp']) . "\n\n";
-            }
-        } else {
-            $text = "⚠️ هیچ موردی بین این دو تاریخ یافت نشد.";
-        }
-
-        $this->sendMessage($text);
-        $this->fileHandler->clearUserState($this->chatId);
-        $this->fileHandler->clearUserData($this->chatId, ['start_date']);
-    } else {
-        $this->sendMessage("❌ فرمت تاریخ صحیح نیست. لطفاً به شکل 1403/01/15 وارد کنید.");
-    }
-}
 
         if ($state == 'witting_customer_creation_name') {
             $nameCustomer = $this->text;
@@ -559,6 +531,35 @@ if ($state === 'awaiting_end_date') {
         }
   // Added return
 
+          
+if ($state === 'awaiting_end_date') {
+    if ($this->isValidJalaliDate($this->text)) {
+        $startDate = $this->fileHandler->getUserData($this->chatId, 'start_date');
+        $endDate = $this->text;
+
+        $startTimestamp = $this->jalaliToTimestamp($startDate, true);
+        $endTimestamp = $this->jalaliToTimestamp($endDate, false);
+
+        $results = $this->db->getItemsBetweenTimestamps($startTimestamp, $endTimestamp);
+        $this->deleteMessageWithDelay();
+
+        if (!empty($results)) {
+            $text = "📊 موارد یافت‌شده بین تاریخ‌های انتخابی:\n\n";
+            foreach ($results as $row) {
+                $text .= "✅ " . $row['title'] . "\n";
+                $text .= "🗓 " . jdf::jdate('Y/m/d', $row['timestamp']) . "\n\n";
+            }
+        } else {
+            $text = "⚠️ هیچ موردی بین این دو تاریخ یافت نشد.";
+        }
+
+        $this->sendMessage($text);
+        $this->fileHandler->clearUserState($this->chatId);
+        $this->fileHandler->clearUserData($this->chatId, ['start_date']);
+    } else {
+        $this->sendMessage("❌ فرمت تاریخ صحیح نیست. لطفاً به شکل 1403/01/15 وارد کنید.");
+    }
+}
 if ($state === 'awaiting_start_date') {
     if ($this->isValidJalaliDate($this->text)) {
         $this->fileHandler->saveUserData($this->chatId, 'start_date', $this->text);
