@@ -177,12 +177,18 @@ class BotHandler
     }
 
 } elseif(str_starts_with($callbackData, 'select_date')) {
-  $this->fileHandler->saveState($this->chatId, 'awaiting_start_date');
+    // ذخیره وضعیت برای دریافت تاریخ شروع
+    $this->fileHandler->saveState($this->chatId, 'awaiting_start_date');
+    
     $text = "📅 لطفاً تاریخ شروع را وارد کنید (مثلاً 1403/01/01):\n" .
             "🗓 اطلاعات بین این تاریخ و تاریخ پایان برای شما نمایش داده خواهد شد.";
+    
+    // دکمه‌های کنترلی
     $keyboard = [
         [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']]
     ];
+    
+    // ارسال پیام برای درخواست تاریخ شروع
     $this->sendRequest('editMessageText', [
         'chat_id' => $this->chatId,
         'message_id' => $messageId,
@@ -190,10 +196,57 @@ class BotHandler
         'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE),
         'parse_mode' => 'HTML'
     ]);
+}
 
-} elseif (str_starts_with($callbackData, 'show_dates_panel')) {
+if ($state === 'awaiting_start_date') {
+
+    $startDate = $this->text; 
+    $this->fileHandler->saveUserData($this->chatId, 'start_date', $startDate);
+    $this->fileHandler->saveState($this->chatId, 'awaiting_end_date');
+    
+    $text = "📅 تاریخ شروع ذخیره شد: $startDate\n" .
+            "🔑 حالا لطفاً تاریخ پایان را وارد کنید (مثلاً 1403/01/15):";
+    
+    $keyboard = [
+        [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+        [['text' => '↩️ برگشت به تاریخ شروع', 'callback_data' => 'back_start_date']],
+    ];
+    
+     $this->sendRequest("editMessageText", [
+        'chat_id' => $this->chatId,
+        'message_id' => $messageId,
+        'text' => $text,
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE),
+        'parse_mode' => 'HTML'
+    ]);
+}
+
+if ($state === 'awaiting_end_date') {
+    $endDate = $this->text;
+    $startDate = $this->fileHandler->getUserData($this->chatId, 'start_date');
+    
+    $startTimestamp = $this->jalaliToTimestamp($startDate, true);
+    $endTimestamp = $this->jalaliToTimestamp($endDate, false);
+    
+    $results = $this->db->getItemsBetweenTimestamps($startTimestamp, $endTimestamp);
+    
+    if (!empty($results)) {
+        $text = "📊 موارد یافت‌شده بین تاریخ‌های انتخابی:\n\n";
+        foreach ($results as $row) {
+            $text .= "✅ " . $row['title'] . "\n";
+            $text .= "🗓 " . jdf::jdate('Y/m/d', $row['timestamp']) . "\n\n";
+        }
+    } else {
+        $text = "⚠️ هیچ موردی بین این دو تاریخ یافت نشد.";
+    }
+
+    $this->sendMessage($text);
+    $this->fileHandler->clearUserState($this->chatId);
+    $this->fileHandler->clearUserData($this->chatId, ['start_date']);
+}
+ elseif (str_starts_with($callbackData, 'show_dates_panel')) {
     $text = "📅 لطفاً تاریخ مورد نظر را انتخاب کنید:";
-    $uniqueDates = $this->db->getUniqueCustomerRegistrationDates($chatId); // حالا این تابع adminChatId را می‌پذیرد
+    $uniqueDates = $this->db->getUniqueCustomerRegistrationDates($chatId); 
 
     $keyboard[] = [['text' => ' امروز', 'callback_data' => 'filter_date_today'],
                    ['text' => ' دیروز', 'callback_data' => 'filter_date_yesterday']];
