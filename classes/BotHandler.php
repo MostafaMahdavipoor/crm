@@ -527,9 +527,62 @@ class BotHandler
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
             ]);
-            return; // Added return
+            return; 
+        }
+  // Added return
+
+if ($state === 'awaiting_start_date') {
+    if ($this->isValidJalaliDate($this->text)) {
+        $this->fileHandler->saveUserData($this->chatId, 'start_date', $this->text);
+        $this->fileHandler->saveState($this->chatId, 'awaiting_end_date');
+        $this->deleteMessageWithDelay();
+
+        $text = "📅 تاریخ شروع ذخیره شد!\n\n" .
+                "حال لطفاً تاریخ پایان را وارد کنید (مثلاً 1403/01/15):";
+
+        $keyboard = [
+            [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+            [['text' => '↩️ برگشت به تاریخ شروع', 'callback_data' => 'back_start_date']],
+        ];
+
+        $this->sendRequest("sendMessage", [
+            'chat_id' => $this->chatId,
+            'text' => $text,
+            'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+        ]);
+    } else {
+        $this->sendMessage("❌ فرمت تاریخ صحیح نیست. لطفاً به شکل 1403/01/01 وارد کنید.");
+    }
+}
+        
+if ($state === 'awaiting_end_date') {
+    if ($this->isValidJalaliDate($this->text)) {
+        $startDate = $this->fileHandler->getUserData($this->chatId, 'start_date');
+        $endDate = $this->text;
+
+        $startTimestamp = $this->jalaliToTimestamp($startDate, true);
+        $endTimestamp = $this->jalaliToTimestamp($endDate, false);
+
+        $results = $this->db->getItemsBetweenTimestamps($startTimestamp, $endTimestamp);
+        $this->deleteMessageWithDelay();
+
+        if (!empty($results)) {
+            $text = "📊 موارد یافت‌شده بین تاریخ‌های انتخابی:\n\n";
+            foreach ($results as $row) {
+                $text .= "✅ " . $row['title'] . "\n";
+                $text .= "🗓 " . jdf::jdate('Y/m/d', $row['timestamp']) . "\n\n";
+            }
+        } else {
+            $text = "⚠️ هیچ موردی بین این دو تاریخ یافت نشد.";
         }
 
+        $this->sendMessage($text);
+        $this->fileHandler->clearUserState($this->chatId);
+        $this->fileHandler->clearUserData($this->chatId, ['start_date']);
+    } else {
+        $this->sendMessage("❌ فرمت تاریخ صحیح نیست. لطفاً به شکل 1403/01/15 وارد کنید.");
+    }
+}
 
         if ($state == 'witting_customer_creation_number') {
 
@@ -627,6 +680,24 @@ class BotHandler
         }
     }
 
+private function isValidJalaliDate($date)
+{
+    $parts = explode('/', str_replace('۰', '0', $date));
+    return count($parts) === 3 && jdf::checkdate($parts[1], $parts[2], $parts[0]);
+}
+
+private function jalaliToTimestamp($date, $isStartOfDay = true)
+{
+    $parts = explode('/', str_replace('۰', '0', $date));
+    return jdf::jmktime(
+        $isStartOfDay ? 0 : 23,
+        $isStartOfDay ? 0 : 59,
+        $isStartOfDay ? 0 : 59,
+        $parts[1],
+        $parts[2],
+        $parts[0]
+    );
+}
 
     private function showMainMenu($chatId, $messageId = null): void
     {
