@@ -234,7 +234,7 @@ class BotHandler
         'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE),
         'parse_mode' => 'HTML'
     ]);
-
+  }
   elseif (str_starts_with($callbackData, 'back_number')) {
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number"); // Set state to allow re-entering number
