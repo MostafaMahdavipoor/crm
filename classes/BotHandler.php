@@ -530,29 +530,6 @@ class BotHandler
             return; // Added return
         }
 
-if ($state === 'awaiting_start_date') {
-    if ($this->isValidJalaliDate($this->text)) {
-        $this->fileHandler->saveUserData($this->chatId, 'start_date', $this->text);
-        $this->fileHandler->saveState($this->chatId, 'awaiting_end_date');
-        $this->deleteMessageWithDelay();
-
-        $text = "📅 تاریخ شروع ذخیره شد!\n\n" .
-                "حال لطفاً تاریخ پایان را وارد کنید (مثلاً 1403/01/15):";
-
-        $keyboard = [
-            [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
-            [['text' => '↩️ برگشت به تاریخ شروع', 'callback_data' => 'back_start_date']],
-        ];
-
-        $this->sendRequest("sendMessage", [
-            'chat_id' => $this->chatId,
-            'text' => $text,
-            'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-        ]);
-    } else {
-        $this->sendMessage("❌ فرمت تاریخ صحیح نیست. لطفاً به شکل 1403/01/01 وارد کنید.");
-    }
-}
 
         if ($state == 'witting_customer_creation_number') {
 
