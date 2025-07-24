@@ -176,31 +176,7 @@ class BotHandler
             $filterText = $selectedDate;
             break;
     }
-    
-    if ($callbackData === 'select_date') {
-    $this->fileHandler->setUserState($this->chatId, 'awaiting_start_date');
-    $this->sendMessage("📅 لطفاً تاریخ شروع را وارد کنید (مثال: 1402/12/01)");
-}
 
-    $text = "📋 مشتریان ثبت شده در تاریخ {$filterText}:\n";
-    $keyboard = [];
-    if (empty($customersByDate)) {
-        $text .= "هیچ مشتری در این بازه زمانی ثبت نشده است.";
-    } else {
-        foreach ($customersByDate as $customer) {
-            $keyboard[] = [['text' => $customer['name'] . " (" . $this->getStatusText($customer['status']) . ")", 'callback_data' => 'customer_' . $customer['id']]];
-        }
-    }
-    $keyboard[] = [['text' => '🔙 بازگشت به پنل تاریخ‌ها', 'callback_data' => 'show_dates_panel']];
-    $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
-
-    $this->sendRequest('editMessageText', [
-        'chat_id' => $chatId,
-        'message_id' => $messageId,
-        'text' => $text,
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-    ]);
-    return;
 } elseif (str_starts_with($callbackData, 'show_dates_panel')) {
     $text = "📅 لطفاً تاریخ مورد نظر را انتخاب کنید:";
     $uniqueDates = $this->db->getUniqueCustomerRegistrationDates($chatId); // حالا این تابع adminChatId را می‌پذیرد
@@ -219,6 +195,21 @@ class BotHandler
         'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
     ]);
     return;
+  }
+  elseif(str_starts_with($callbackData, 'select_date')) {
+  $this->fileHandler->saveState($this->chatId, 'awaiting_start_date');
+    $text = "📅 لطفاً تاریخ شروع را وارد کنید (مثلاً 1403/01/01):\n" .
+            "🗓 اطلاعات بین این تاریخ و تاریخ پایان برای شما نمایش داده خواهد شد.";
+    $keyboard = [
+        [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']]
+    ];
+    $this->sendRequest('editMessageText', [
+        'chat_id' => $this->chatId,
+        'message_id' => $messageId,
+        'text' => $text,
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE),
+        'parse_mode' => 'HTML'
+    ]);
   }
   elseif (str_starts_with($callbackData, 'back_number')) {
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
@@ -608,10 +599,62 @@ class BotHandler
                 'parse_mode' => 'HTML'
             ]);
             $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status"); // Set state to indicate waiting for status
-            return; // Added return
+            return; 
         }
-    }
+        if ($state === 'awaiting_start_date') {
+    if ($this->isValidJalaliDate($this->text)) {
+        $this->fileHandler->saveUserData($this->chatId, 'start_date', $this->text);
+        $this->fileHandler->saveState($this->chatId, 'awaiting_end_date');
+        $this->deleteMessageWithDelay();
 
+        $text = "📅 تاریخ شروع ذخیره شد!\n\n" .
+                "حال لطفاً تاریخ پایان را وارد کنید (مثلاً 1403/01/15):";
+
+        $keyboard = [
+            [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+            [['text' => '↩️ برگشت به تاریخ شروع', 'callback_data' => 'back_start_date']],
+        ];
+
+        $this->sendRequest("sendMessage", [
+            'chat_id' => $this->chatId,
+            'text' => $text,
+            'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+        ]);
+    } else {
+        $this->sendMessage("❌ فرمت تاریخ صحیح نیست. لطفاً به شکل 1403/01/01 وارد کنید.");
+    }
+}
+if ($state === 'awaiting_end_date') {
+    if ($this->isValidJalaliDate($this->text)) {
+        $startDate = $this->fileHandler->getUserData($this->chatId, 'start_date');
+        $endDate = $this->text;
+
+        $startTimestamp = $this->jalaliToTimestamp($startDate, true);
+        $endTimestamp = $this->jalaliToTimestamp($endDate, false);
+
+        $results = $this->db->getItemsBetweenTimestamps($startTimestamp, $endTimestamp);
+        $this->deleteMessageWithDelay();
+
+        if (!empty($results)) {
+            $text = "📊 موارد یافت‌شده بین تاریخ‌های انتخابی:\n\n";
+            foreach ($results as $row) {
+                $text .= "✅ " . $row['title'] . "\n";
+                $text .= "🗓 " . jdf::jdate('Y/m/d', $row['timestamp']) . "\n\n";
+            }
+        } else {
+            $text = "⚠️ هیچ موردی بین این دو تاریخ یافت نشد.";
+        }
+
+        $this->sendMessage($text);
+        $this->fileHandler->clearUserState($this->chatId);
+        $this->fileHandler->clearUserData($this->chatId, ['start_date']);
+    } else {
+        $this->sendMessage("❌ فرمت تاریخ صحیح نیست. لطفاً به شکل 1403/01/15 وارد کنید.");
+    }
+}
+
+    }
+           // Added return
 
     private function showMainMenu($chatId, $messageId = null): void
     {
@@ -685,10 +728,25 @@ class BotHandler
             'http_code' => $httpCode,
             'curl_error' => $curlError
         ];
-        // This is a placeholder for actual logging. You might want to write to a file or a database.
-        // For example:
-        // file_put_contents('telegram_api.log', json_encode($logData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . ",\n", FILE_APPEND);
     }
+private function isValidJalaliDate($date)
+{
+    $parts = explode('/', str_replace('۰', '0', $date));
+    return count($parts) === 3 && jdf::checkdate($parts[1], $parts[2], $parts[0]);
+}
+
+private function jalaliToTimestamp($date, $isStartOfDay = true)
+{
+    $parts = explode('/', str_replace('۰', '0', $date));
+    return jdf::jmktime(
+        $isStartOfDay ? 0 : 23,
+        $isStartOfDay ? 0 : 59,
+        $isStartOfDay ? 0 : 59,
+        $parts[1],
+        $parts[2],
+        $parts[0]
+    );
+}
 
 
 
