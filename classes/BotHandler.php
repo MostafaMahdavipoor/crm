@@ -308,7 +308,7 @@ class BotHandler
             $keyboard = [
                 [['text' => '✉️ رد کردن مرحله ایمیل', 'callback_data' => 'skip_email']],
                 [['text' => '🚫 کنسل', 'callback_data' => 'cancel']],
-                [['text' => '↩️ برگشت به مرحله شماره', 'callback_data' => 'back_number']], // Changed to back to number
+                [['text' => '↩️ برگشت به مرحله شماره', 'callback_data' => 'back_number']],
             ];
 
             $reply_markup = [
