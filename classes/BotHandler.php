@@ -12,7 +12,7 @@ class BotHandler
     private $text;
     private $messageId;
     private $message;
-    public  $db;
+    public $db;
     private $fileHandler;
     private $zarinpalPaymentHandler;
     private $botToken;
@@ -170,6 +170,8 @@ class BotHandler
             $customersByDate = $this->db->getCustomersLastMonth($chatId);
             $filterText = "ماه گذشته";
             break;
+                $this->sendFilteredCustomers($customersByDate, $filterText);
+
         default:
             // اگر تاریخ خاصی بود (مثلاً 2024-07-22)
             $customersByDate = $this->db->getCustomersByDate($chatId, $selectedDate);
@@ -429,36 +431,6 @@ class BotHandler
             ]);
         }
     }
-
-public function filter_date_today(int $adminChatId): void
-{
-    $today = date('Y-m-d');
-
-    $customers = $this->db->getCustomersByDate($adminChatId, $today);
-if (empty($customers)) {
-        $this->sendRequest('sendMessage', [
-            'chat_id' => $adminChatId,
-            'text' => "📭 امروز هیچ مشتری‌ای ثبت‌نام نکرده است.",
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
-
-  $message = "📅 <b>لیست مشتریان ثبت‌نام‌شده امروز (" . jdate('Y/m/d') . ")</b>\n\n";
-
-    foreach ($customers as $index => $customer) {
-        $message .= "👤 <b>" . ($index + 1) . ". " . htmlspecialchars($customer['name']) . "</b>\n";
-        $message .= "📞 " . htmlspecialchars($customer['phone']) . "\n";
-        $message .= "🕒 زمان ثبت‌نام: " . jdate('H:i', strtotime($customer['created_at'])) . "\n\n";
-    }
-
-   $this->sendRequest('sendMessage', [
-        'chat_id' => $adminChatId,
-        'text' => $message,
-        'parse_mode' => 'HTML'
-    ]);
-}
-
     private function getStatusText($status): string
     {
         switch ($status) {
@@ -694,6 +666,30 @@ if (empty($customers)) {
         // file_put_contents('telegram_api.log', json_encode($logData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . ",\n", FILE_APPEND);
     }
 
+private function sendFilteredCustomers(array $customers, string $label): void
+{
+    if (empty($customers)) {
+        $this->sendRequest('sendMessage', [
+            'chat_id' => $this->chatId,
+            'text' => "📭 هیچ مشتری‌ای در بازه <b>{$label}</b> ثبت‌نام نکرده است.",
+            'parse_mode' => 'HTML'
+        ]);
+        return;
+    }
+
+    $message = "📋 <b>لیست مشتریان ثبت‌نام‌شده در {$label}</b>\n\n";
+    foreach ($customers as $index => $customer) {
+        $message .= "👤 <b>" . ($index + 1) . ". " . htmlspecialchars($customer['name'] ?? '-') . "</b>\n";
+        $message .= "📞 " . htmlspecialchars($customer['phone'] ?? '-') . "\n";
+        $message .= "🕒 " . jdate('Y/m/d H:i', strtotime($customer['created_at'])) . "\n\n";
+    }
+
+    $this->sendRequest('sendMessage', [
+        'chat_id' => $this->chatId,
+        'text' => $message,
+        'parse_mode' => 'HTML'
+    ]);
+}
 
 
 }
