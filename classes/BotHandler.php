@@ -117,7 +117,7 @@ class BotHandler
             if ($customer) {
                 $text = "📋 اطلاعات مشتری:\n";
                 $text .= "نام: " . ($customer['name'] ?? 'N/A') . "\n";
-                $text .= "شماره تماس: " . ($customer['number'] ?? 'N/A') . "\n";
+                $text .= "شماره تماس: " . ($customer['phone'] ?? 'N/A') . "\n";
                 $text .= "ایمیل کاربر: " . ($customer['email'] ?? 'N/A') . "\n";
                 // Assuming the database column is 'status', not 'statuse'
                 $text .= "وضعیت مشتری: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n"; 
@@ -270,28 +270,32 @@ class BotHandler
 
             return;
         } elseif (str_starts_with($callbackData, 'back_number')) {
-    $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
-    $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
-    
-    $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
-        "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
-        "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
+            $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
+            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number"); // Set state to allow re-entering number
 
-    $keyboard = [
-        [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
-        [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
-    ];
+            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
+                "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
+                "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
 
-    $this->sendRequest('editMessageText', [
-        'chat_id' => $this->chatId,
-        'text' => $text,
-        'message_id' => $messageId,
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE),
-        'parse_mode' => 'HTML'
-    ]);
+            $keyboard = [
+                [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
+            ];
+
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'HTML'
+            ]);
         } elseif (str_starts_with($callbackData, 'back_email')) {
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
-            $numberCustomer = $this->fileHandler->getnumberCustomer($this->chatId);
+            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
 
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
@@ -322,7 +326,7 @@ class BotHandler
             $this->fileHandler->saveStatusCustomer($this->chatId, $statusCustomer);
 
             $name = $this->fileHandler->getNameCustomer($this->chatId);
-            $number = $this->fileHandler->getnumberCustomer($this->chatId);
+            $number = $this->fileHandler->getPhoneCustomer($this->chatId);
             $email = $this->fileHandler->getEmailCustomer($this->chatId);
             $note = $this->fileHandler->getNoteCustomer($this->chatId); 
 
@@ -362,7 +366,7 @@ class BotHandler
             $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status"); // Move to next step: status selection
 
             $name = $this->fileHandler->getNameCustomer($this->chatId);
-            $numberCustomer = $this->fileHandler->getnumberCustomer($this->chatId);
+            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
             $emailCustomer = "رد شد"; // Display text for skipped email
 
             $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
@@ -376,7 +380,7 @@ class BotHandler
                 [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
                 [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
                 [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
-                [['text' => '🔙 برگشت به مرحله ایمیل', 'callback_data' => 'back_email']],
+                [['text' => '🔙 بازگشت', 'callback_data' => 'back_email']],
             ];
 
             $reply_markup = [
@@ -467,7 +471,7 @@ if ($state == 'witting_customer_creation_number') {
     $name = $this->fileHandler->getNameCustomer($this->chatId);
     $messageId = $this->fileHandler->getMessageId($this->chatId);
     $this->deleteMessageWithDelay();
-    $this->fileHandler->savenumberCustomer($this->chatId, $numberCustomer);
+    $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
     $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
 
     $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
@@ -479,7 +483,7 @@ if ($state == 'witting_customer_creation_number') {
         [['text' => '✉️ رد کردن مرحله ایمیل', 'callback_data' => 'skip_email']],
         [
             ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
-            ['text' => '🔙 بازگشت به مرحله شماره', 'callback_data' => 'back_number']
+            ['text' => '🔙 بازگشت', 'callback_data' => 'back_number']
         ]
     ];
 
@@ -495,9 +499,10 @@ if ($state == 'witting_customer_creation_number') {
         'parse_mode' => 'HTML'
     ]);
     return;
-  }
-  
 }
+            $this->fileHandler->saveState($chatId, "waiting_customer_creation_status"); 
+            return;     
+        }
     
     private function showMainMenu($chatId, $messageId = null): void
     {
