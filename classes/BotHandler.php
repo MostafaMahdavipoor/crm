@@ -147,35 +147,8 @@ class BotHandler
             
             return;
             
-        } 
-         elseif (str_starts_with($callbackData, 'filter_date_')) {
-    $selectedDate = str_replace('filter_date_', '', $callbackData);
-    $customersByDate = [];
-    $filterText = "";
-
-    switch ($selectedDate) {
-        case 'today':
-            $customersByDate = $this->db->getCustomersToday($chatId);
-            $filterText = "امروز";
-            break;
-        case 'yesterday':
-            $customersByDate = $this->db->getCustomersYesterday($chatId);
-            $filterText = "دیروز";
-            break;
-        case 'last_week':
-            $customersByDate = $this->db->getCustomersLastWeek($chatId);
-            $filterText = "هفته گذشته";
-            break;
-        case 'last_month':
-            $customersByDate = $this->db->getCustomersLastMonth($chatId);
-            $filterText = "ماه گذشته";
-            break;
-        default:
-            // اگر تاریخ خاصی بود (مثلاً 2024-07-22)
-            $customersByDate = $this->db->getCustomersByDate($chatId, $selectedDate);
-            $filterText = $selectedDate;
-            break;
-    }
+        
+         
 
 } elseif (str_starts_with($callbackData, 'show_dates_panel')) {
     $text = "📅 لطفاً تاریخ مورد نظر را انتخاب کنید:";
@@ -220,15 +193,38 @@ class BotHandler
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
             ]);
-        } 
-   elseif (str_starts_with($callbackData, 'filter_date_')) {
-            $selectedDate = str_replace('filter_date_', '', $callbackData);
-            $customersByDate = $this->db->getCustomersByDate($chatId, $selectedDate);
-         $text = "📋 مشتریان ثبت شده در تاریخ {$selectedDate}:\n";
+
+
+
+
+        } elseif (str_starts_with($callbackData, 'select_date')) {
+
+            
         } elseif (str_starts_with($callbackData, 'filter_date_')) {
             $selectedDate = str_replace('filter_date_', '', $callbackData);
-            $customersByDate = $this->db->getCustomersByDate($chatId, $selectedDate); 
+            $customersByDate = [];
+            $filterText = "";
+
+            switch ($selectedDate) {
+                case 'today':
+                    $customersByDate = $this->db->getCustomersToday($chatId);
+                    $filterText = "امروز";
+                    break;
+                case 'yesterday':
+                    $customersByDate = $this->db->getCustomersYesterday($chatId);
+                    $filterText = "دیروز";
+                    break;
+                case 'last_week':
+                    $customersByDate = $this->db->getCustomersLastWeek($chatId);
+                    $filterText = "هفته گذشته";
+                    break;
+                case 'last_month':
+                    $customersByDate = $this->db->getCustomersLastMonth($chatId);
+                    $filterText = "ماه گذشته";
+                    break;
             
+            }
+                    
             $text = "📋 مشتریان ثبت شده در تاریخ {$selectedDate}:\n";
             $keyboard = [];
             if (empty($customersByDate)) {
