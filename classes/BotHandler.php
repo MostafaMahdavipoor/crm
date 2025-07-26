@@ -86,22 +86,7 @@ class BotHandler
 
       // از اینجا به بعد، کدهای مربوط به مدیریت کالبک‌ها را اضافه می‌کنیم
 
-      if ($callbackData === "back_to_number") {
-    $this->fileHandler->saveState($this->chatId, "back_to_number");
-    $this->sendRequest("editMessageText", [
-        "chat_id" => $this->chatId,
-        "message_id" => $this->messageId,
-        "text" => "📞 لطفاً شماره تماس مشتری را وارد کنید:",
-        "reply_markup" => json_encode([
-            "inline_keyboard" => [
-                [["text" => "🔙 بازگشت", "callback_data" => "back_to_name"]],
-                [["text" => "🚫 کنسل", "callback_data" => "cancel"]],
-            ]
-        ])
-    ]);
-    return;
-}
-
+      
         if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
             $text = "📝 لطفاً نام کامل مشتری را وارد کنید:";
             $keyboard = [
