@@ -471,30 +471,7 @@ class BotHandler
                 ]);
                 return;
             }
-            
-            $name = $this->fileHandler->getNameCustomer($this->chatId);
-
-            $messageId = $this->fileHandler->getMessageId($this->chatId);
-            $this->deleteMessageWithDelay();
-            $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
-
-            $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
-                "\n<blockquote dir='rtl'> شماره تماس: $numberCustomer</blockquote>" .
-                "📞 لطفاً ایمیل مشتری جدید را وارد کنید:\n" .
-                "🔑 ایمیل برای ارتباط با مشتری کاربردی است. لطفاً ایمیل را با دقت وارد کنید.";
-
-            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
-
-            $keyboard = [
-                [
-                    ['text' => '✉️ رد کردن مرحله ایمیل', 'callback_data' => 'skip_email'],
-                ],
-                [
-                    ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
-                    ['text' => '↩️ برگشت به مرحله شماره', 'callback_data' => 'back_number'], 
-                ]
-            ];
-
+    
             $reply_markup = [
                 'inline_keyboard' => $keyboard
             ];
