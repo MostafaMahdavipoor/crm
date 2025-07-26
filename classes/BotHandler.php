@@ -269,8 +269,8 @@ class BotHandler
             ]);
 
             return;
-        } elseif (str_starts_with($callbackData, 'back_number')) {
-           $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
+    } elseif (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_number')) {
+            $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
                 "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
