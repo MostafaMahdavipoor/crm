@@ -160,4 +160,29 @@ class FileHandler
         $this->clearStatusCustomer($chatId);
         $this->clearNoteCustomer($chatId);
 }
+public function saveStartDate($chatId, $startDate): void
+{
+    $data = $this->loadUserData($chatId);
+    $data['start_date'] = $startDate;
+    $this->saveUserData($chatId, $data);
+}
+
+public function getStartDate($chatId): ?string
+{
+    $data = $this->loadUserData($chatId);
+    return $data['start_date'] ?? null;
+}
+
+public function saveEndDate($chatId, $endDate): void
+{
+    $data = $this->loadUserData($chatId);
+    $data['end_date'] = $endDate;
+    $this->saveUserData($chatId, $data);
+}
+
+public function getEndDate($chatId): ?string
+{
+    $data = $this->loadUserData($chatId);
+    return $data['end_date'] ?? null;
+}
 }
