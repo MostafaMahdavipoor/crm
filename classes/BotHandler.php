@@ -198,8 +198,11 @@ class BotHandler
                     
             $text = "📋 مشتریان ثبت شده در تاریخ {$selectedDate}:\n";
             $keyboard = [];
-            if (empty($customersByDate)) {
+            if (empty($customersByDate) && $customersByDate != null) {
                 $text .= "هیچ مشتری در این تاریخ ثبت نشده است.";
+            } elseif (empty($customersByDate)) {
+                $text .= "هیچ مشتری در این تاریخ ثبت نشده است.";
+            }
             } else {
                 foreach ($customersByDate as $customer) {
                     $keyboard[] = [['text' => $customer['name'] . " (" . $this->getStatusText($customer['status']) . ")", 'callback_data' => 'customer_' . $customer['id']]];
