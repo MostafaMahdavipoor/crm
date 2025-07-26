@@ -270,9 +270,8 @@ class BotHandler
 
             return;
         } elseif (str_starts_with($callbackData, 'back_number')) {
-            $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
-            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number"); // Set state to allow re-entering number
-
+           $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
+            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
                 "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
                 "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
@@ -483,7 +482,7 @@ if ($state == 'witting_customer_creation_number') {
         [['text' => '✉️ رد کردن مرحله ایمیل', 'callback_data' => 'skip_email']],
         [
             ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
-            ['text' => '🔙 بازگشت', 'callback_data' => 'back_number']
+            ['text' => '🔙 بازگشت به مرحله شماره', 'callback_data' => 'back_number']
         ]
     ];
 
