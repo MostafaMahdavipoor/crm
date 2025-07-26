@@ -121,7 +121,7 @@ class BotHandler
                 $text .= "ایمیل کاربر: " . ($customer['email'] ?? 'N/A') . "\n";
                 // Assuming the database column is 'status', not 'statuse'
                 $text .= "وضعیت مشتری: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n"; 
-                $text .= "یادداشت: " . ($customer['note'] ?? 'ندارد') . "\n"; // If a 'note' field exists
+                $text .= "یادداشت: " . ($customer['note'] ?? 'ندارد') . "\n"; 
             } else {
                 $text = "❗️ مشتری پیدا نشد.";
             }
@@ -168,36 +168,7 @@ class BotHandler
         'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
     ]);
     return;
-  }
-  elseif (str_starts_with($callbackData, 'back_number')) {
-            $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
-            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number"); // Set state to allow re-entering number
-
-            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
-                "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
-                "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
-
-            $keyboard = [
-                [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
-                [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
-            ];
-
-            $reply_markup = [
-                'inline_keyboard' => $keyboard
-            ];
-
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $this->chatId,
-                'text' => $text,
-                'message_id' => $messageId,
-                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
-                'parse_mode' => 'HTML'
-            ]);
-
-
-
-
-        } elseif (str_starts_with($callbackData, 'select_date')) {
+   } elseif (str_starts_with($callbackData, 'select_date')) {
 
             
         } elseif (str_starts_with($callbackData, 'filter_date_')) {
