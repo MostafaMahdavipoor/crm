@@ -12,7 +12,7 @@ class BotHandler
     private $text;
     private $messageId;
     private $message;
-    public $db;
+    public  $db;
     private $fileHandler;
     private $zarinpalPaymentHandler;
     private $botToken;
@@ -430,6 +430,34 @@ class BotHandler
         }
     }
 
+public function filter_date_today(int $adminChatId): void
+{
+    $today = date('Y-m-d');
+
+    $customers = $this->db->getCustomersByDate($adminChatId, $today);
+if (empty($customers)) {
+        $this->sendRequest('sendMessage', [
+            'chat_id' => $adminChatId,
+            'text' => "📭 امروز هیچ مشتری‌ای ثبت‌نام نکرده است.",
+            'parse_mode' => 'HTML'
+        ]);
+        return;
+    }
+
+  $message = "📅 <b>لیست مشتریان ثبت‌نام‌شده امروز (" . jdate('Y/m/d') . ")</b>\n\n";
+
+    foreach ($customers as $index => $customer) {
+        $message .= "👤 <b>" . ($index + 1) . ". " . htmlspecialchars($customer['name']) . "</b>\n";
+        $message .= "📞 " . htmlspecialchars($customer['phone']) . "\n";
+        $message .= "🕒 زمان ثبت‌نام: " . jdate('H:i', strtotime($customer['created_at'])) . "\n\n";
+    }
+
+   $this->sendRequest('sendMessage', [
+        'chat_id' => $adminChatId,
+        'text' => $message,
+        'parse_mode' => 'HTML'
+    ]);
+}
 
     private function getStatusText($status): string
     {
