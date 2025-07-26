@@ -86,6 +86,22 @@ class BotHandler
 
       // از اینجا به بعد، کدهای مربوط به مدیریت کالبک‌ها را اضافه می‌کنیم
 
+      if ($callbackData === "back_to_number") {
+    $this->fileHandler->saveState($this->chatId, "back_to_number");
+    $this->sendRequest("editMessageText", [
+        "chat_id" => $this->chatId,
+        "message_id" => $this->messageId,
+        "text" => "📞 لطفاً شماره تماس مشتری را وارد کنید:",
+        "reply_markup" => json_encode([
+            "inline_keyboard" => [
+                [["text" => "🔙 بازگشت", "callback_data" => "back_to_name"]],
+                [["text" => "🚫 کنسل", "callback_data" => "cancel"]],
+            ]
+        ])
+    ]);
+    return;
+}
+
         if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
             $text = "📝 لطفاً نام کامل مشتری را وارد کنید:";
             $keyboard = [
@@ -117,7 +133,7 @@ class BotHandler
             if ($customer) {
                 $text = "📋 اطلاعات مشتری:\n";
                 $text .= "نام: " . ($customer['name'] ?? 'N/A') . "\n";
-                $text .= "شماره تماس: " . ($customer['phone'] ?? 'N/A') . "\n";
+                $text .= "شماره تماس: " . ($customer['number'] ?? 'N/A') . "\n";
                 $text .= "ایمیل کاربر: " . ($customer['email'] ?? 'N/A') . "\n";
                 // Assuming the database column is 'status', not 'statuse'
                 $text .= "وضعیت مشتری: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n"; 
@@ -291,7 +307,7 @@ class BotHandler
     ]);
         } elseif (str_starts_with($callbackData, 'back_email')) {
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
-            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $numberCustomer = $this->fileHandler->getnumberCustomer($this->chatId);
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
 
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
@@ -322,14 +338,14 @@ class BotHandler
             $this->fileHandler->saveStatusCustomer($this->chatId, $statusCustomer);
 
             $name = $this->fileHandler->getNameCustomer($this->chatId);
-            $phone = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $number = $this->fileHandler->getnumberCustomer($this->chatId);
             $email = $this->fileHandler->getEmailCustomer($this->chatId);
             $note = $this->fileHandler->getNoteCustomer($this->chatId); 
 
             // Handle skipped email: convert 'skipped_email' placeholder to empty string for DB
             $emailToSave = ($email === 'skipped_email') ? '' : $email;
 
-            $result = $this->db->insertCustomer($this->chatId, $name, $phone, $emailToSave, $statusCustomer, $note);
+            $result = $this->db->insertCustomer($this->chatId, $name, $number, $emailToSave, $statusCustomer, $note);
 
             if ($result) {
                 $text = "✅ ثبت مشتری با موفقیت انجام شد!";
@@ -362,7 +378,7 @@ class BotHandler
             $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status"); // Move to next step: status selection
 
             $name = $this->fileHandler->getNameCustomer($this->chatId);
-            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $numberCustomer = $this->fileHandler->getnumberCustomer($this->chatId);
             $emailCustomer = "رد شد"; // Display text for skipped email
 
             $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
@@ -376,7 +392,7 @@ class BotHandler
                 [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
                 [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
                 [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
-                [['text' => '🔙 بازگشت', 'callback_data' => 'back_email']],
+                [['text' => '🔙 برگشت به مرحله ایمیل', 'callback_data' => 'back_email']],
             ];
 
             $reply_markup = [
@@ -467,7 +483,7 @@ if ($state == 'witting_customer_creation_number') {
     $name = $this->fileHandler->getNameCustomer($this->chatId);
     $messageId = $this->fileHandler->getMessageId($this->chatId);
     $this->deleteMessageWithDelay();
-    $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
+    $this->fileHandler->savenumberCustomer($this->chatId, $numberCustomer);
     $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
 
     $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
