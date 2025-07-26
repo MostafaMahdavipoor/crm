@@ -151,4 +151,13 @@ class FileHandler
         $data = $this->getAllData();
         return $data[$chatId]['email'] ?? null;
     }
+
+    public function clearCustomerCreationData($chatId): void
+    {
+        $this->clearNameCustomer($chatId);
+        $this->clearPhoneCustomer($chatId);
+        $this->clearEmailCustomer($chatId);
+        $this->clearStatusCustomer($chatId);
+        $this->clearNoteCustomer($chatId);
+}
 }

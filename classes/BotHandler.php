@@ -196,7 +196,7 @@ class BotHandler
             
             }
                     
-            $text = "📋 مشتریان ثبت شده در تاریخ {$selectedDate}:\n";
+            $text = "📋 مشتریان ثبت شده در {$filterText}:\n";
             $keyboard = [];
             if (empty($customersByDate) && $customersByDate != null) {
                 $text .= "هیچ مشتری در این تاریخ ثبت نشده است.";
@@ -382,7 +382,7 @@ class BotHandler
                 [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
                 [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
                 [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
-                [['text' => '🔙 بازگشت', 'callback_data' => 'back_number']], // Go back to number entry
+                [['text' => '🔙 بازگشت', 'callback_data' => 'back_email']],
             ];
 
             $reply_markup = [
@@ -491,7 +491,7 @@ class BotHandler
                 ],
                 [
                     ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
-                    ['text' => '🔙 بازگشت', 'callback_data' => 'back_name'], // Changed to back_name
+                    ['text' => '🔙 بازگشت', 'callback_data' => 'back_number'], 
                 ]
             ];
 
@@ -552,8 +552,8 @@ class BotHandler
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
             ]);
-            $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status"); // Set state to indicate waiting for status
-            return; // Added return
+            $this->fileHandler->saveState($chatId, "waiting_customer_creation_status"); 
+            return;     
         }
     }
 
@@ -561,7 +561,6 @@ class BotHandler
     private function showMainMenu($chatId, $messageId = null): void
     {
         $text = "👋 به سیستم مدیریت مشتری خوش اومدی!\nاز منوی زیر یکی از گزینه‌ها رو انتخاب کن:";
-        error_log("message Id: " . $messageId);
         $keyboard = [
             [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
             [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers_page_1']],

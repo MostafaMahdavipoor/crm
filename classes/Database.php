@@ -500,5 +500,13 @@ class Database
                 $stmt->close();
             }
         }
+        
     }
-}
+
+    public function checkPhoneExists($phone, $chatId): bool
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM customers WHERE phone = ? AND chat_id = ?");
+            $stmt->execute([$phone, $chatId]);
+            return $stmt->fetchColumn() > 0;
+        }
+    }
