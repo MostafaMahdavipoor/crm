@@ -249,7 +249,58 @@ class BotHandler
                 'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
             ]);
             return;
-        } elseif (str_starts_with($callbackData, 'list_customers')) {
+        } 
+        elseif (str_starts_with($callbackData, 'list_customers_page_')) {
+    $pageSize = 5;
+    $page = (int)str_replace('list_customers_page_', '', $callbackData);
+    if ($page < 1) $page = 1;
+
+    $offset = ($page - 1) * $pageSize;
+    $customers = $this->db->getCustomersPaginated($offset, $pageSize, $chatId);
+    $totalCustomers = $this->db->getTotalCustomersCount($chatId);
+    $totalPages = ceil($totalCustomers / $pageSize);
+
+    $keyboard = [];
+    if (empty($customers)) {
+        $text = "❗️ شما هیچ مشتری‌ای ثبت نکرده‌اید.";
+    } else {
+        $text = "📋 لیست مشتریان شما (صفحه {$page} از {$totalPages}):\n\n";
+        foreach ($customers as $customer) {
+            $text .= "👤 <b>" . htmlspecialchars($customer['name']) . "</b>\n";
+            $text .= "📞 " . htmlspecialchars($customer['phone']) . "\n";
+            $text .= "🗓 " . jdate('Y/m/d', strtotime($customer['created_at'])) . "\n\n";
+
+            $keyboard[] = [[
+                'text' => $customer['name'] . " (" . $this->getStatusText($customer['status']) . ")",
+                'callback_data' => 'customer_' . $customer['id']
+            ]];
+        }
+
+        $paginationButtons = [];
+        if ($page > 1) {
+            $paginationButtons[] = ['text' => '⬅️ صفحه قبل', 'callback_data' => 'list_customers_page_' . ($page - 1)];
+        }
+        if ($page < $totalPages) {
+            $paginationButtons[] = ['text' => '➡️ صفحه بعد', 'callback_data' => 'list_customers_page_' . ($page + 1)];
+        }
+        if (!empty($paginationButtons)) {
+            $keyboard[] = $paginationButtons;
+        }
+    }
+
+    $keyboard[] = [['text' => '📅 فیلتر بر اساس تاریخ', 'callback_data' => 'show_dates_panel']];
+    $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
+
+    $this->sendRequest('editMessageText', [
+        'chat_id' => $chatId,
+        'message_id' => $messageId,
+        'text' => $text,
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE),
+        'parse_mode' => 'HTML'
+    ]);
+}
+
+        elseif (str_starts_with($callbackData, 'list_customers')) {
             $pageSize = 5;
             $page = 1; 
 
@@ -273,7 +324,9 @@ class BotHandler
                     $keyboard[] = [
                         ['text' => $customer['name'] . " (" . $this->getStatusText($customer['status']) . ")", 'callback_data' => 'customer_' . $customer['id']]
                     ];
+                    
                 }
+                
             }
             
             $paginationRow = [];
