@@ -119,8 +119,7 @@ class BotHandler
                 $text .= "نام: " . ($customer['name'] ?? 'N/A') . "\n";
                 $text .= "شماره تماس: " . ($customer['phone'] ?? 'N/A') . "\n";
                 $text .= "ایمیل کاربر: " . ($customer['email'] ?? 'N/A') . "\n";
-                // Assuming the database column is 'status', not 'statuse'
-                $text .= "وضعیت مشتری: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n"; 
+               $text .= "وضعیت مشتری: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n"; 
                 $text .= "یادداشت: " . ($customer['note'] ?? 'ندارد') . "\n"; // If a 'note' field exists
             } else {
                 $text = "❗️ مشتری پیدا نشد.";
@@ -431,6 +430,8 @@ class BotHandler
             ]);
         }
     }
+
+
     private function getStatusText($status): string
     {
         switch ($status) {
@@ -666,30 +667,6 @@ class BotHandler
         // file_put_contents('telegram_api.log', json_encode($logData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . ",\n", FILE_APPEND);
     }
 
-private function sendFilteredCustomers(array $customers, string $label): void
-{
-    if (empty($customers)) {
-        $this->sendRequest('sendMessage', [
-            'chat_id' => $this->chatId,
-            'text' => "📭 هیچ مشتری‌ای در بازه <b>{$label}</b> ثبت‌نام نکرده است.",
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
-
-    $message = "📋 <b>لیست مشتریان ثبت‌نام‌شده در {$label}</b>\n\n";
-    foreach ($customers as $index => $customer) {
-        $message .= "👤 <b>" . ($index + 1) . ". " . htmlspecialchars($customer['name'] ?? '-') . "</b>\n";
-        $message .= "📞 " . htmlspecialchars($customer['phone'] ?? '-') . "\n";
-        $message .= "🕒 " . jdate('Y/m/d H:i', strtotime($customer['created_at'])) . "\n\n";
-    }
-
-    $this->sendRequest('sendMessage', [
-        'chat_id' => $this->chatId,
-        'text' => $message,
-        'parse_mode' => 'HTML'
-    ]);
-}
 
 
 }

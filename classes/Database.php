@@ -448,12 +448,11 @@ class Database
         $today = date('Y-m-d');
         return $this->getCustomersByDate($adminChatId, $today);
     }
-public function getCustomersYesterday(int $adminChatId): array
-{
-    $yesterday = date('Y-m-d', strtotime('-1 day'));
-    return $this->getCustomersByDate($adminChatId, $yesterday);
-}
-
+     public function getCustomersYesterday(int $adminChatId): array
+    {
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+        return $this->getCustomersByDate($adminChatId, $yesterday);
+    }
      public function getCustomersLastWeek(int $adminChatId): array
     {
         $customers = [];
