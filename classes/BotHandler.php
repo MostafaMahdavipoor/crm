@@ -254,8 +254,6 @@ class BotHandler
             if (!empty($paginationRow)) {
                 $keyboard[] = $paginationRow;
             }
-
-            // Always present buttons at the bottom of the list
             $keyboard[] = [
                 ['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel'],
                 ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
@@ -460,81 +458,52 @@ class BotHandler
             return; // Added return
         }
 
-
-        if ($state == 'witting_customer_creation_number') {
-
-            $numberCustomer = $this->text;
-            if (!preg_match('/^09\d{9}$/', $numberCustomer)) {
-                $this->sendRequest('sendMessage', [
-                    'chat_id' => $this->chatId,
-                    'text' => "❌ شماره تماس وارد شده معتبر نیست. لطفاً شماره‌ای با فرمت صحیح وارد کنید. (مثال: 09345678912)",
-                ]);
-                return;
-            }
+if ($state == 'witting_customer_creation_number') {
+    $numberCustomer = $this->text;
+    if (!preg_match('/^09\d{9}$/', $numberCustomer)) {
+        $this->sendRequest('sendMessage', [
+            'chat_id' => $this->chatId,
+            'text' => "❌ شماره تماس وارد شده معتبر نیست. لطفاً شماره‌ای با فرمت صحیح وارد کنید. (مثال: 09345678912)",
+        ]);
+        return;
+    }
     
-            $reply_markup = [
-                'inline_keyboard' => $keyboard
-            ];
+    $name = $this->fileHandler->getNameCustomer($this->chatId);
+    $messageId = $this->fileHandler->getMessageId($this->chatId);
+    $this->deleteMessageWithDelay();
+    $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
+    $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
 
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $this->chatId,
-                'text' => $text,
-                'message_id' => $messageId,
-                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
-                'parse_mode' => 'HTML'
-            ]);
-            return; // Added return
-        }
-        
-        if ($state == 'witting_customer_creation_email') {
-            $emailCustomer = $this->text;
-            
-            if (!filter_var($emailCustomer, FILTER_VALIDATE_EMAIL)) {
-                $this->sendRequest('sendMessage', [
-                    'chat_id' => $this->chatId,
-                    'text' => "❌ ایمیل وارد شده معتبر نیست. لطفاً یک ایمیل صحیح وارد کنید.",
-                ]);
-                return;
-            }
+    $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
+        "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
+        "📞 لطفاً ایمیل مشتری جدید را وارد کنید:\n" .
+        "🔑 ایمیل برای ارتباط با مشتری کاربردی است. لطفاً ایمیل را با دقت وارد کنید.";
 
-            $messageId = $this->fileHandler->getMessageId($this->chatId);
-            $this->deleteMessageWithDelay();
-            $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
+    $keyboard = [
+        [['text' => '✉️ رد کردن مرحله ایمیل', 'callback_data' => 'skip_email']],
+        [
+            ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
+            ['text' => '🔙 بازگشت', 'callback_data' => 'back_number']
+        ]
+    ];
 
-            $name = $this->fileHandler->getNameCustomer($this->chatId);
-            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
+    $reply_markup = [
+        'inline_keyboard' => $keyboard
+    ];
 
-            $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
-                     "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
-                     "\n<blockquote dir='rtl'>ایمیل: $emailCustomer</blockquote>" .
-                     "لطفاً وضعیت مشتری را انتخاب کنید:\n" .
-                     " وضعیت مشتری می‌تواند یکی از گزینه‌های زیر باشد:";
-
-            $keyboard = [
-                [['text' => '❄️ سرد', 'callback_data' => 'cold']],
-                [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
-                [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
-                [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
-                [['text' => '🔙 بازگشت', 'callback_data' => 'back_email']],
-            ];
-
-            $reply_markup = [
-                'inline_keyboard' => $keyboard
-            ];
-
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $this->chatId,
-                'text' => $text,
-                'message_id' => $messageId,
-                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
-                'parse_mode' => 'HTML'
-            ]);
-            $this->fileHandler->saveState($chatId, "waiting_customer_creation_status"); 
+    $this->sendRequest('editMessageText', [
+        'chat_id' => $this->chatId,
+        'text' => $text,
+        'message_id' => $messageId,
+        'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+        'parse_mode' => 'HTML'
+    ]);
+    return;
+}
+         $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status");
             return;     
         }
-    }
-
-
+    
     private function showMainMenu($chatId, $messageId = null): void
     {
         $text = "👋 به سیستم مدیریت مشتری خوش اومدی!\nاز منوی زیر یکی از گزینه‌ها رو انتخاب کن:";
