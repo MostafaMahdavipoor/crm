@@ -59,15 +59,16 @@ class BotHandler
             $messageId = $callbackQuery["message"]["message_id"] ?? null;
 
             if (!$callbackData || !$chatId || !$callbackQueryId || !$messageId) {
-                error_log("اطلاعات مورد نیاز در کالبک وجود ندارد.");
-                return;
-            }
+                    error_log("اطلاعات مورد نیاز در کالبک وجود ندارد: callbackData=$callbackData, chatId=$chatId, callbackQueryId=$callbackQueryId, messageId=$messageId");
+                     return;
+                }
 
+    $state = $this->fileHandler->getState($chatId);
             // مدیریت درخواست وارد کردن تاریخ دستی
             if (str_starts_with($callbackData, 'manual_date_input')) {
                 $text = "📅 لطفاً تاریخ شروع را به فرمت زیر وارد کنید:\n\n";
-                $text .= "فرمت: YYYY-MM-DD (مثال: 2024-01-15)\n";
-                $text .= "یا به فرمت شمسی: 1403/01/25\n\n";
+                $text .= "فرمت: <code>YYYY-MM-DD</code> (مثال: <code>2024-01-15</code>)\n";
+                $text .= "یا به فرمت شمسی: <code>1403/01/25</code>\n\n";
                 $text .= "پس از وارد کردن تاریخ شروع، تاریخ پایان را نیز خواهم پرسید.";
 
                 $keyboard = [
