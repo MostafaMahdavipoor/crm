@@ -283,54 +283,7 @@ if ($state == 'waiting_end_date') {
         'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
     ]);
     return;
-} elseif (str_starts_with($callbackData, 'filter_date_')) {
-    $selectedDate = str_replace('filter_date_', '', $callbackData);
-    $customersByDate = [];
-    $filterText = "";
 
-    switch ($selectedDate) {
-        case 'today':
-            $customersByDate = $this->db->getCustomersToday($chatId);
-            $filterText = "امروز";
-            break;
-        case 'yesterday':
-            $customersByDate = $this->db->getCustomersYesterday($chatId);
-            $filterText = "دیروز";
-            break;
-        case 'last_week':
-            $customersByDate = $this->db->getCustomersLastWeek($chatId);
-            $filterText = "هفته گذشته";
-            break;
-        case 'last_month':
-            $customersByDate = $this->db->getCustomersLastMonth($chatId);
-            $filterText = "ماه گذشته";
-            break;
-        
-       case 'last_7_days':
-            $customersByDate = $this->db->getCustomersLastNDays($chatId, 7);
-            $filterText = "7 روز گذشته";
-            break;
-        case 'last_15_days':
-            $customersByDate = $this->db->getCustomersLastNDays($chatId, 15);
-            $filterText = "15 روز گذشته";
-            break;
-        case 'last_30_days':
-            $customersByDate = $this->db->getCustomersLastNDays($chatId, 30);
-            $filterText = "30 روز گذشته";
-            break;
-        case 'last_3_months':
-            $customersByDate = $this->db->getCustomersLastNMonths($chatId, 3);
-            $filterText = "3 ماه گذشته";
-            break;
-        case 'last_6_months':
-            $customersByDate = $this->db->getCustomersLastNMonths($chatId, 6);
-            $filterText = "6 ماه گذشته";
-            break;
-        case 'last_year':
-            $customersByDate = $this->db->getCustomersLastYear($chatId);
-            $filterText = "1 سال گذشته";
-            break;
-    }
 } elseif (str_starts_with($callbackData, 'filter_date_')) {
     $selectedDate = str_replace('filter_date_', '', $callbackData);
             $customersByDate = [];
@@ -360,8 +313,7 @@ if ($state == 'waiting_end_date') {
             $keyboard = [];
             if (empty($customersByDate) && $customersByDate != null) {
                 $text .= "هیچ مشتری در این تاریخ ثبت نشده است.";
-            } elseif (empty($customersByDate) && $customersByDate == null) {
-                $text .= "هیچ مشتری در این تاریخ ثبت نشده است.";
+
             } elseif ($customersByDate != null) {
                 foreach ($customersByDate as $customer) {
                     $keyboard[] = [['text' => $customer['name'] . " (" . $this->getStatusText($customer['status']) . ")", 'callback_data' => 'customer_' . $customer['id']]];
@@ -375,6 +327,9 @@ if ($state == 'waiting_end_date') {
                 'message_id' => $messageId,
                 'text' => $text,
                 'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+            ]);
+            $this->sendRequest('answerCallbackQuery', [
+                'callback_query_id' => $callbackQueryId
             ]);
             return;
         } elseif (str_starts_with($callbackData, 'list_customers')) {
