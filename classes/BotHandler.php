@@ -157,7 +157,7 @@ if ($state == 'waiting_end_date') {
         }
     }
     
-    $keyboard[] = [['text' => '🔍 جستجوی بازه جدید', 'callback_data' => 'select_date']];
+    $keyboard[] = [['text' => '🔍 جستجوی بازه جدید', 'callback_data' => 'manual_date_input']];
     $keyboard[] = [['text' => '🔙 بازگشت به پنل تاریخ‌ها', 'callback_data' => 'show_dates_panel']];
     $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
     
@@ -244,7 +244,7 @@ if ($state == 'waiting_end_date') {
                    ['text' => ' دیروز', 'callback_data' => 'filter_date_yesterday']];
     $keyboard[] = [['text' => ' هفته گذشته', 'callback_data' => 'filter_date_last_week'],
                    ['text' => ' ماه گذشته', 'callback_data' => 'filter_date_last_month']];
-    $keyboard[] = [['text' => 'انتخاب بازه زمانی خاص', 'callback_data' => 'select_date']];
+    $keyboard[] = [['text' => 'انتخاب بازه زمانی خاص', 'callback_data' => 'manual_date_input']];
     $keyboard[] = [['text' => '🔙 بازگشت به لیست مشتریان', 'callback_data' => 'list_customers_page_1']];
     $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
     $this->sendRequest('editMessageText', [
@@ -254,35 +254,7 @@ if ($state == 'waiting_end_date') {
         'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
     ]);
     return;
-   } elseif (str_starts_with($callbackData, 'select_date')) {
-    $text = "📅 لطفاً بازه زمانی مورد نظر را انتخاب کنید:";
-    
-    $keyboard = [
-        [
-            ['text' => '📅 7 روز گذشته', 'callback_data' => 'filter_date_last_7_days'],
-            ['text' => '📅 15 روز گذشته', 'callback_data' => 'filter_date_last_15_days']
-        ],
-        [
-            ['text' => '📅 30 روز گذشته', 'callback_data' => 'filter_date_last_30_days'],
-            ['text' => '📅 3 ماه گذشته', 'callback_data' => 'filter_date_last_3_months']
-        ],
-        [
-            ['text' => '📅 6 ماه گذشته', 'callback_data' => 'filter_date_last_6_months'],
-            ['text' => '📅 1 سال گذشته', 'callback_data' => 'filter_date_last_year']
-        ],
-        [
-            ['text' => '📝 وارد کردن تاریخ دستی', 'callback_data' => 'manual_date_input']
-        ],
-        [
-            ['text' => '🔙 بازگشت به پنل تاریخ‌ها', 'callback_data' => 'show_dates_panel']
-        ],
-        [
-            ['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']
-        ]
-    ];
-    
-    
-    $this->sendRequest('editMessageText', [
+ $this->sendRequest('editMessageText', [
         'chat_id' => $chatId,
         'message_id' => $messageId,
         'text' => $text,
@@ -297,7 +269,7 @@ if ($state == 'waiting_end_date') {
     $text .= "پس از وارد کردن تاریخ شروع، تاریخ پایان را نیز خواهم پرسید.";
     
     $keyboard = [
-        [['text' => '🔙 بازگشت', 'callback_data' => 'select_date']],
+        [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
         [['text' => '❌ لغو', 'callback_data' => 'cancel']]
     ];
     
