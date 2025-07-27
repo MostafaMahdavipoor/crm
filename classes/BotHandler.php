@@ -530,7 +530,7 @@ class BotHandler
 
     public function handleRequest(): void
     {
-        $state = $this->fileHandler->getState($this->chatId);
+        $state = $this->fileHandler->getState($this-> $chatId);
         error_log("State: " . $state);
         if ($this->text === '/start') {
             $this->fileHandler->saveState($this->chatId, null);
