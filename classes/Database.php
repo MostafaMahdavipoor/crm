@@ -502,50 +502,7 @@ class Database
         }
         
     }
-
-    public function checkPhoneExists($phone, $chatId): bool
-    {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM customers WHERE phone = ? AND chat_id = ?");
-            $stmt->execute([$phone, $chatId]);
-            return $stmt->fetchColumn() > 0;
-        }
-    public function getCustomersLastNDays($adminChatId, $days)
-{
-    $sql = "SELECT * FROM customers 
-            WHERE admin_chat_id = ? 
-            AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) 
-            ORDER BY created_at DESC";
-    
-    $stmt = $this->pdo->prepare($sql);
-    $stmt->execute([$adminChatId, $days]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-public function getCustomersLastNMonths($adminChatId, $months)
-{
-    $sql = "SELECT * FROM customers 
-            WHERE admin_chat_id = ? 
-            AND created_at >= DATE_SUB(NOW(), INTERVAL ? MONTH) 
-            ORDER BY created_at DESC";
-    
-    $stmt = $this->pdo->prepare($sql);
-    $stmt->execute([$adminChatId, $months]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-public function getCustomersLastYear($adminChatId)
-{
-    $sql = "SELECT * FROM customers 
-            WHERE admin_chat_id = ? 
-            AND created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR) 
-            ORDER BY created_at DESC";
-    
-    $stmt = $this->pdo->prepare($sql);
-    $stmt->execute([$adminChatId]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-public function getCustomersByDateRange($adminChatId, $startDate, $endDate)
+    public function getCustomersByDateRange($adminChatId, $startDate, $endDate)
 {
     $sql = "SELECT * FROM customers 
             WHERE admin_chat_id = ? 
