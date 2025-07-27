@@ -57,11 +57,13 @@ class BotHandler
         $chatId = $callbackQuery["message"]["chat"]["id"] ?? null;
         $callbackQueryId = $callbackQuery["id"] ?? null;
         $messageId = $callbackQuery["message"]["message_id"] ?? null;
+
     if (!$callbackData || !$chatId || !$callbackQueryId || !$messageId) {
         error_log("اطلاعات مورد نیاز در کالبک وجود ندارد: callbackData=$callbackData, chatId=$chatId, callbackQueryId=$callbackQueryId, messageId=$messageId");
         return;
     }
 
+    $state = $this->fileHandler->getState($chatId);
 
     // مدیریت کالبک‌ها و state‌ها در یک ساختار if-elseif
     if (str_starts_with($callbackData, 'manual_date_input')) {
@@ -74,14 +76,11 @@ class BotHandler
             [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
             [['text' => '❌ لغو', 'callback_data' => 'cancel']]
         ];
-            $state = $this->fileHandler->getState($chatId);
-            $nameCustomer = $this->text;
-            $messageId = $this->fileHandler->getMessageId($this->chatId);
-            $this->fileHandler->saveNameCustomer($this->chatId, $nameCustomer);
-            $this->fileHandler->saveState($this->chatId, "waiting_start_date");
-            $this->fileHandler->saveMessageId($chatId, $messageId);
 
-            $this->sendRequest('editMessageText', [
+        $this->fileHandler->saveState($chatId, "waiting_start_date");
+        $this->fileHandler->saveMessageId($chatId, $messageId);
+
+        $this->sendRequest('editMessageText', [
             'chat_id' => $chatId,
             'message_id' => $messageId,
             'text' => $text,
@@ -531,7 +530,7 @@ class BotHandler
 
     public function handleRequest(): void
     {
-        $state = $this->fileHandler->getState($this-> $chatId);
+        $state = $this->fileHandler->getState($this->chatId);
         error_log("State: " . $state);
         if ($this->text === '/start') {
             $this->fileHandler->saveState($this->chatId, null);
