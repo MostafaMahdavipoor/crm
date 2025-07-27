@@ -418,7 +418,6 @@ class Database
         return $arr;
     }
 
-    // اضافه کردن تابع getCustomersByDate بر اساس نیاز BotHandler
     public function getCustomersByDate(int $adminChatId, string $date): array
     {
         $customers = [];
@@ -430,7 +429,7 @@ class Database
                 error_log("❌ Prepare failed for getCustomersByDate: " . $this->mysqli->error);
                 return [];
             }
-            $stmt->bind_param("is", $adminChatId, $date); // adminChatId is int, date is string
+            $stmt->bind_param("is", $adminChatId, $date); 
             $stmt->execute();
             $result = $stmt->get_result();
             return $result->fetch_all(MYSQLI_ASSOC);

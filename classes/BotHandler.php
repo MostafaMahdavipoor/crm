@@ -53,13 +53,10 @@ class BotHandler
 
         public function handleCallbackQuery($callbackQuery): void
         {
-
-
-
-            $callbackData = $callbackQuery["data"] ?? null;
-            $chatId = $callbackQuery["message"]["chat"]["id"] ?? null;
-            $callbackQueryId = $callbackQuery["id"] ?? null;
-            $messageId = $callbackQuery["message"]["message_id"] ?? null;
+        $callbackData = $callbackQuery["data"] ?? null;
+        $chatId = $callbackQuery["message"]["chat"]["id"] ?? null;
+        $callbackQueryId = $callbackQuery["id"] ?? null;
+        $messageId = $callbackQuery["message"]["message_id"] ?? null;
 
     if (!$callbackData || !$chatId || !$callbackQueryId || !$messageId) {
         error_log("اطلاعات مورد نیاز در کالبک وجود ندارد: callbackData=$callbackData, chatId=$chatId, callbackQueryId=$callbackQueryId, messageId=$messageId");
@@ -533,136 +530,49 @@ class BotHandler
 
     public function handleRequest(): void
     {
-        $state = $this->fileHandler->getState($this-> $chatId);
+        $state = $this->fileHandler->getState($this->chatId);
         error_log("State: " . $state);
         if ($this->text === '/start') {
-            $this->fileHandler->saveState($this-> $chatId, null);
-            $this->showMainMenu($this-> $chatId);
+            $this->fileHandler->saveState($this->chatId, null);
+            $this->showMainMenu($this->chatId);
             return; // Added return
         }
 
         
 // از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
 
-if ($state == 'witting_customer_creation_name') {
-        $nameCustomer = $this->text;
-        $messageId = $this->fileHandler->getMessageId($this->chatId);
-        $this->deleteMessageWithDelay();
-        $this->fileHandler->saveNameCustomer($this->chatId, $nameCustomer);
-        $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
 
-        $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
+        if ($state == 'witting_customer_creation_name') {
+            $nameCustomer = $this->text;
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
+            $this->fileHandler->saveNameCustomer($this->chatId, $nameCustomer);
+            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number");
+
+
+            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
                 "📞 لطفاً شماره تماس مشتری جدید را وارد کنید:\n" .
                 "🔑 این شماره برای ارتباط با مشتری ضروری است. لطفاً شماره را با دقت وارد کنید.";
 
-        $keyboard = [
-            [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
-            [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
-        ];
+            $keyboard = [
+                [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
+                [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
+            ];
 
-        $reply_markup = [
-            'inline_keyboard' => $keyboard
-        ];
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
 
-        $this->sendRequest('editMessageText', [
-            'chat_id' => $this->chatId,
-            'text' => $text,
-            'message_id' => $messageId,
-            'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
-
-    if ($state == 'witting_customer_creation_number') {
-        $numberCustomer = $this->text;
-        if (!preg_match('/^09\d{9}$/', $numberCustomer)) {
-            $this->sendRequest('sendMessage', [
+            $this->sendRequest('editMessageText', [
                 'chat_id' => $this->chatId,
-                'text' => "❌ شماره تماس وارد شده معتبر نیست. لطفاً شماره‌ای با فرمت صحیح وارد کنید. (مثال: <code>09345678912</code>)",
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
             ]);
-            return;
+            return; // Added return
         }
 
-        $name = $this->fileHandler->getNameCustomer($this->chatId);
-        $messageId = $this->fileHandler->getMessageId($this->chatId);
-        $this->deleteMessageWithDelay();
-        $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
-        $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
-
-        $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
-                "\n<blockquote dir='rtl'>شماره تماس: <code>$numberCustomer</code></blockquote>" .
-                "📞 لطفاً ایمیل مشتری جدید را وارد کنید:\n" .
-                "🔑 ایمیل برای ارتباط با مشتری کاربردی است. لطفاً ایمیل را با دقت وارد کنید.";
-
-        $keyboard = [
-            [['text' => '✉️ رد کردن مرحله ایمیل', 'callback_data' => 'skip_email']],
-            [
-                ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
-                ['text' => '🔙 بازگشت', 'callback_data' => 'back_number']
-            ]
-        ];
-
-        $reply_markup = [
-            'inline_keyboard' => $keyboard
-        ];
-
-        $this->sendRequest('editMessageText', [
-            'chat_id' => $this->chatId,
-            'text' => $text,
-            'message_id' => $messageId,
-            'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
-
-    if ($state == 'witting_customer_creation_email') {
-        $emailCustomer = $this->text;
-        if (!filter_var($emailCustomer, FILTER_VALIDATE_EMAIL) && $emailCustomer !== 'skipped_email') {
-            $this->sendRequest('sendMessage', [
-                'chat_id' => $this->chatId,
-                'text' => "❌ ایمیل وارد شده معتبر نیست. لطفاً ایمیل معتبری وارد کنید (مثال: <code>example@domain.com</code>) یا گزینه رد کردن را انتخاب کنید.",
-                'parse_mode' => 'HTML'
-            ]);
-            return;
-        }
-
-        $name = $this->fileHandler->getNameCustomer($this->chatId);
-        $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
-        $messageId = $this->fileHandler->getMessageId($this->chatId);
-        $this->deleteMessageWithDelay();
-        $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
-        $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status");
-
-        $text = "<blockquote dir='rtl'>نام مشتری: $name</blockquote>" .
-                "\n<blockquote dir='rtl'>شماره تماس: <code>$numberCustomer</code></blockquote>" .
-                "\n<blockquote dir='rtl'>ایمیل: <code>$emailCustomer</code></blockquote>" .
-                "لطفاً وضعیت مشتری را انتخاب کنید:\n" .
-                "وضعیت مشتری می‌تواند یکی از گزینه‌های زیر باشد:";
-
-        $keyboard = [
-            [['text' => '❄️ سرد', 'callback_data' => 'cold']],
-            [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
-            [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
-            [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
-            [['text' => '🔙 بازگشت', 'callback_data' => 'back_email']]
-        ];
-
-        $reply_markup = [
-            'inline_keyboard' => $keyboard
-        ];
-
-        $this->sendRequest('editMessageText', [
-            'chat_id' => $this->chatId,
-            'text' => $text,
-            'message_id' => $messageId,
-            'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
 if ($state == 'witting_customer_creation_number') {
     $numberCustomer = $this->text;
     if (!preg_match('/^09\d{9}$/', $numberCustomer)) {
