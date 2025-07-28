@@ -398,7 +398,7 @@ class BotHandler
         } elseif (str_starts_with($callbackData, 'manual_date_input')) {
             $text = "📅 لطفاً تاریخ شروع را به فرمت زیر وارد کنید:\n\n";
             $text .= " فرمت قمری : <code>2024-01-15</code>\n";
-            $text .= "یا به فرمت شمسی: <code>1404/05/05</code>\n\n";
+            $text .= "یا به فرمت شمسی: <code>1404/05/05</code>\n\n";getCustomersByDateRange
             $text .= "پس از وارد کردن تاریخ شروع، تاریخ پایان را نیز خواهم پرسید.";
 
             $keyboard = [

@@ -501,5 +501,25 @@ class Database
         }
         
     }
-
+public function getCustomersByDateRange(int $adminChatId, string $startDate, string $endDate): array
+{
+    try {
+        $stmt = $this->mysqli->prepare(
+            "SELECT * FROM customers WHERE admin_chat_id = ? AND DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC"
+        );
+        if (!$stmt) {
+            error_log("❌ Prepare failed for getCustomersByDateRange: " . $this->mysqli->error);
+            return [];
+        }
+        $stmt->bind_param("iss", $adminChatId, $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $customers = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $customers;
+    } catch (Exception $e) {
+        error_log("Error fetching customers by date range: " . $e->getMessage());
+        return [];
+    }
+}
 }
