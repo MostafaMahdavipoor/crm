@@ -492,70 +492,8 @@ class BotHandler
             ]);
             return;
         }
- if ($state === 'waiting_end_date') {
-    $endDate = $this->text;
-    $startDate = $this->fileHandler->getStartDate($this->chatId);
-    $messageId = $this->fileHandler->getMessageId($this->chatId);
-    $this->deleteMessageWithDelay();
-
-    if (!$this->isValidGregorianDate($endDate)) {
-        $this->sendRequest('sendMessage', [
-            'chat_id' => $this->chatId,
-            'text' => "❌ فرمت تاریخ اشتباه است. لطفاً به فرمت میلادی <code>YYYY-MM-DD</code> وارد کنید.\n\nمثال: <code>2024-03-15</code>",
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
-
-    if (strtotime($endDate) < strtotime($startDate)) {
-        $this->sendRequest('sendMessage', [
-            'chat_id' => $this->chatId,
-            'text' => "❌ تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.",
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
-
-}
-
-if ($state == 'waiting_start_date') {
-    $startDate = $this->text;
-    $messageId = $this->fileHandler->getMessageId($this->chatId);
-    $this->deleteMessageWithDelay();
-    $this->fileHandler->saveStartDate($this->chatId, $startDate);
-    $this->fileHandler->saveState($this->chatId, "waiting_end_date");
-
-    $text = "<blockquote dir='rtl'>📅 تاریخ شروع: $startDate</blockquote>\n\n";
-    $text .= "📅 لطفاً تاریخ پایان را به فرمت میلادی وارد کنید:\n\n";
-    $text .= "فرمت: <code>YYYY-MM-DD</code>\n";
-    $text .= "مثال: <code>2024-03-20</code>\n\n";
-
-    $keyboard = [
-        [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
-        [['text' => '❌ لغو', 'callback_data' => 'cancel']]
-    ];
-
-    $this->sendRequest('editMessageText', [
-        'chat_id' => $this->chatId,
-        'text' => $text,
-        'message_id' => $messageId,
-        'parse_mode' => 'HTML',
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-    ]);
-    return;
-    
-    if (!$this->isValidGregorianDate($startDate)) {
-        $this->sendRequest('sendMessage', [
-            'chat_id' => $this->chatId,
-            'text' => "❌ فرمت تاریخ اشتباه است. لطفاً به فرمت میلادی <code>YYYY-MM-DD</code> وارد کنید.\n\nمثال: <code>2024-03-15</code>",
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
-}
-
-// متد manual_date_input - شروع فرآیند انتخاب بازه تاریخ
-elseif (str_starts_with($callbackData, 'manual_date_input')) {
+        
+if (str_starts_with($callbackData, 'manual_date_input')) {
     $text = "📅 لطفاً تاریخ شروع را به فرمت میلادی وارد کنید:\n\n";
     $text .= "فرمت میلادی: <code>YYYY-MM-DD</code>\n";
     $text .= "مثال: <code>2024-01-15</code>\n\n";
@@ -609,8 +547,65 @@ elseif (str_starts_with($callbackData, 'manual_date_input')) {
         'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
     ]);
     return;
-}
-        if ($state == 'witting_customer_creation_email') {
+}  elseif ($state == 'waiting_start_date') {
+    $startDate = $this->text;
+    $messageId = $this->fileHandler->getMessageId($this->chatId);
+    $this->deleteMessageWithDelay();
+    $this->fileHandler->saveStartDate($this->chatId, $startDate);
+    $this->fileHandler->saveState($this->chatId, "waiting_end_date");
+
+    $text = "<blockquote dir='rtl'>📅 تاریخ شروع: $startDate</blockquote>\n\n";
+    $text .= "📅 لطفاً تاریخ پایان را به فرمت میلادی وارد کنید:\n\n";
+    $text .= "فرمت: <code>YYYY-MM-DD</code>\n";
+    $text .= "مثال: <code>2024-03-20</code>\n\n";
+
+    $keyboard = [
+        [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
+        [['text' => '❌ لغو', 'callback_data' => 'cancel']]
+    ];
+
+    $this->sendRequest('editMessageText', [
+        'chat_id' => $this->chatId,
+        'text' => $text,
+        'message_id' => $messageId,
+        'parse_mode' => 'HTML',
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+    ]);
+    return;
+    
+    if (!$this->isValidGregorianDate($startDate)) {
+        $this->sendRequest('sendMessage', [
+            'chat_id' => $this->chatId,
+            'text' => "❌ فرمت تاریخ اشتباه است. لطفاً به فرمت میلادی <code>YYYY-MM-DD</code> وارد کنید.\n\nمثال: <code>2024-03-15</code>",
+            'parse_mode' => 'HTML'
+        ]);
+        return;
+    }
+elseif ($state === 'waiting_end_date') {
+    $endDate = $this->text;
+    $startDate = $this->fileHandler->getStartDate($this->chatId);
+    $messageId = $this->fileHandler->getMessageId($this->chatId);
+    $this->deleteMessageWithDelay();
+
+    if (!$this->isValidGregorianDate($endDate)) {
+        $this->sendRequest('sendMessage', [
+            'chat_id' => $this->chatId,
+            'text' => "❌ فرمت تاریخ اشتباه است. لطفاً به فرمت میلادی <code>YYYY-MM-DD</code> وارد کنید.\n\nمثال: <code>2024-03-15</code>",
+            'parse_mode' => 'HTML'
+        ]);
+        return;
+    }
+
+    if (strtotime($endDate) < strtotime($startDate)) {
+        $this->sendRequest('sendMessage', [
+            'chat_id' => $this->chatId,
+            'text' => "❌ تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.",
+            'parse_mode' => 'HTML'
+        ]);
+        return;
+    }
+
+} if ($state == 'witting_customer_creation_email') {
             $emailCustomer = $this->text;
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
             $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
@@ -647,7 +642,7 @@ elseif (str_starts_with($callbackData, 'manual_date_input')) {
             return;
         }
     }
-    
+}
     private function showMainMenu($chatId, $messageId = null): void
     {
         $text = "👋 به سیستم مدیریت مشتری خوش اومدی!\nاز منوی زیر یکی از گزینه‌ها رو انتخاب کن:";
