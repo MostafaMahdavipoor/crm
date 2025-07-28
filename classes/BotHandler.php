@@ -398,7 +398,7 @@ class BotHandler
         } elseif (str_starts_with($callbackData, 'manual_date_input')) {
             $text = "📅 لطفاً تاریخ شروع را به فرمت زیر وارد کنید:\n\n";
             $text .= " فرمت قمری : <code>2024-01-15</code>\n";
-            $text .= "یا به فرمت شمسی: <code>1403/01/25</code>\n\n";
+            $text .= "یا به فرمت شمسی: <code>1404/05/05</code>\n\n";
             $text .= "پس از وارد کردن تاریخ شروع، تاریخ پایان را نیز خواهم پرسید.";
 
             $keyboard = [
@@ -465,8 +465,8 @@ class BotHandler
             $this->fileHandler->saveStartDate($this->chatId, $startDate);
             $this->fileHandler->saveState($this->chatId, "waiting_end_date");
 
-            $text = "📅 تاریخ شروع: <code>$startDate</code>\n\n";
-            $text .= "حالا لطفاً تاریخ پایان را وارد کنید:";
+            $text =  "<blockquote dir='rtl'>📅 تاریخ شروع: $startDate</blockquote>" .
+            "حالا لطفاً تاریخ پایان را وارد کنید:";
 
             $keyboard = [
                 [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
