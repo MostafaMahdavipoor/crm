@@ -394,30 +394,9 @@ class BotHandler
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
             ]);
-        } elseif (str_starts_with($callbackData, 'manual_date_input')) {
-            $text = "📅 لطفاً تاریخ شروع را به فرمت زیر وارد کنید:\n\n";
-            $text .= " فرمت قمری : <code>2024-01-15</code>\n";
-            $text .= "پس از وارد کردن تاریخ شروع، تاریخ پایان را نیز خواهم پرسید.";
-
-            $keyboard = [
-                [['text' => '🔙 بازگشت', 'callback_data' => 'show_dates_panel']],
-                [['text' => '❌ لغو', 'callback_data' => 'cancel']]
-            ];
-
-            $this->fileHandler->saveState($chatId, "waiting_start_date");
-            $this->fileHandler->saveMessageId($chatId, $messageId);
-
-            $this->sendRequest('editMessageText', [
-                'chat_id' => $chatId,
-                'message_id' => $messageId,
-                'text' => $text,
-                'parse_mode' => 'HTML', // فعال کردن فرمت HTML
-                'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-            ]);
         }
+
     }
-
-
     private function getStatusText($status): string
     {
         switch ($status) {
@@ -515,44 +494,7 @@ class BotHandler
             ]);
             return;
         }
-        
-if ($state == 'waiting_start_date') {
-    $startDate = $this->text;
-    $messageId = $this->fileHandler->getMessageId($this->chatId);
-    $this->deleteMessageWithDelay();
-
-    if (!$this->isValidGregorianDate($startDate)) {
-        $this->sendRequest('sendMessage', [
-            'chat_id' => $this->chatId,
-            'text' => "❌ فرمت تاریخ اشتباه است. لطفاً به فرمت میلادی <code>YYYY-MM-DD</code> وارد کنید.\n\nمثال: <code>2024-03-15</code>",
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
-
-    $this->fileHandler->saveStartDate($this->chatId, $startDate);
-    $this->fileHandler->saveState($this->chatId, "waiting_end_date");
-
-    $text = "<blockquote dir='rtl'>📅 تاریخ شروع: $startDate</blockquote>\n\n";
-    $text .= "📅 لطفاً تاریخ پایان را به فرمت میلادی وارد کنید:\n\n";
-    $text .= "فرمت: <code>YYYY-MM-DD</code>\n";
-    $text .= "مثال: <code>2024-03-20</code>\n\n";
-
-    $keyboard = [
-        [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
-        [['text' => '❌ لغو', 'callback_data' => 'cancel']]
-    ];
-
-    $this->sendRequest('editMessageText', [
-        'chat_id' => $this->chatId,
-        'text' => $text,
-        'message_id' => $messageId,
-        'parse_mode' => 'HTML',
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-    ]);
-    return;
-}
-if ($state === 'waiting_end_date') {
+ if ($state === 'waiting_end_date') {
     $endDate = $this->text;
     $startDate = $this->fileHandler->getStartDate($this->chatId);
     $messageId = $this->fileHandler->getMessageId($this->chatId);
@@ -576,7 +518,67 @@ if ($state === 'waiting_end_date') {
         return;
     }
 
-    $customersByDate = $this->db->getCustomersByDateRange($this->chatId, $startDate, $endDate);
+}
+
+if ($state == 'waiting_start_date') {
+    $startDate = $this->text;
+    $messageId = $this->fileHandler->getMessageId($this->chatId);
+    $this->deleteMessageWithDelay();
+    $this->fileHandler->saveStartDate($this->chatId, $startDate);
+    $this->fileHandler->saveState($this->chatId, "waiting_end_date");
+
+    $text = "<blockquote dir='rtl'>📅 تاریخ شروع: $startDate</blockquote>\n\n";
+    $text .= "📅 لطفاً تاریخ پایان را به فرمت میلادی وارد کنید:\n\n";
+    $text .= "فرمت: <code>YYYY-MM-DD</code>\n";
+    $text .= "مثال: <code>2024-03-20</code>\n\n";
+
+    $keyboard = [
+        [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
+        [['text' => '❌ لغو', 'callback_data' => 'cancel']]
+    ];
+
+    $this->sendRequest('editMessageText', [
+        'chat_id' => $this->chatId,
+        'text' => $text,
+        'message_id' => $messageId,
+        'parse_mode' => 'HTML',
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+    ]);
+    return;
+    
+    if (!$this->isValidGregorianDate($startDate)) {
+        $this->sendRequest('sendMessage', [
+            'chat_id' => $this->chatId,
+            'text' => "❌ فرمت تاریخ اشتباه است. لطفاً به فرمت میلادی <code>YYYY-MM-DD</code> وارد کنید.\n\nمثال: <code>2024-03-15</code>",
+            'parse_mode' => 'HTML'
+        ]);
+        return;
+    }
+}
+
+// متد manual_date_input - شروع فرآیند انتخاب بازه تاریخ
+elseif (str_starts_with($callbackData, 'manual_date_input')) {
+    $text = "📅 لطفاً تاریخ شروع را به فرمت میلادی وارد کنید:\n\n";
+    $text .= "فرمت میلادی: <code>YYYY-MM-DD</code>\n";
+    $text .= "مثال: <code>2024-01-15</code>\n\n";
+    $text .= "پس از وارد کردن تاریخ شروع، تاریخ پایان را نیز خواهم پرسید.";
+
+    $keyboard = [
+        [['text' => '🔙 بازگشت', 'callback_data' => 'show_dates_panel']],
+        [['text' => '❌ لغو', 'callback_data' => 'cancel']]
+    ];
+
+    $this->fileHandler->saveState($chatId, "waiting_start_date");
+    $this->fileHandler->saveMessageId($chatId, $messageId);
+
+    $this->sendRequest('editMessageText', [
+        'chat_id' => $chatId,
+        'message_id' => $messageId,
+        'text' => $text,
+        'parse_mode' => 'HTML',
+        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+    ]);
+ $customersByDate = $this->db->getCustomersByDateRange($this->chatId, $startDate, $endDate);
 
     $text = "📋 مشتریان ثبت شده از <code>$startDate</code> تا <code>$endDate</code>:\n\n";
     $keyboard = [];
