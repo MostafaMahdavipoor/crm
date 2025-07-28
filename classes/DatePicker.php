@@ -33,7 +33,7 @@ class DatePicker
             $g_month = (int)$today->format('n');
             $g_day = (int)$today->format('j');
 
-            list($year, $month, $day) = gregorian_to_jalali($g_year, $g_month, $g_day);
+            list($year, $month, $day) = jdf::gregorian_to_jalali($g_year, $g_month, $g_day);
         }
         if ($year == 0 || $month == 0 ||  $day == 0) {
             $year = 1404;
