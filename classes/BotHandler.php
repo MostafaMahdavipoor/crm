@@ -465,9 +465,10 @@ class BotHandler
             $this->fileHandler->saveStartDate($this->chatId, $startDate);
             $this->fileHandler->saveState($this->chatId, "waiting_end_date");
 
-            $text =  "<blockquote dir='rtl'>📅 تاریخ شروع: $startDate</blockquote>" .
-            "حالا لطفاً تاریخ پایان را وارد کنید:";
-
+            $text =  "<blockquote dir='rtl'> 📅 تاریخ شروع: $startDate</blockquote>" .
+            $text .= "📅 لطفاً تاریخ پایان را به فرمت زیر وارد کنید:\n\n";
+            $text .= " فرمت قمری : <code>2024-02-15</code>\n";
+            $text .= "یا به فرمت شمسی: <code>1404/05/06</code>\n\n";
             $keyboard = [
                 [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
                 [['text' => '❌ لغو', 'callback_data' => 'cancel']]
