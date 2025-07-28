@@ -86,9 +86,7 @@ class BotHandler
             'parse_mode' => 'HTML',
             'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
         ]);
-    } else {
-        error_log("حالت یا کالبک ناشناخته: callbackData=$callbackData");
-    }
+         }
 
         if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
             $text = "📝 لطفاً نام کامل مشتری را وارد کنید:";
