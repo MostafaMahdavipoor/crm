@@ -438,15 +438,14 @@ class BotHandler
     public function handleRequest(): void
     {
         $state = $this->fileHandler->getState($this->chatId);
-        error_log("State: " . $state);
+        
         if ($this->text === '/start') {
-            $this->fileHandler->saveState($this->chatId, null);
+            $this->fileHandler->saveState($this->chatId, '');
             $this->showMainMenu($this->chatId);
             return; // Added return
         }
 
         
-// از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
 
         if ($state == 'waiting_start_date') {
             $startDate = $this->text;
@@ -469,7 +468,7 @@ class BotHandler
             $text .= "📅 لطفاً تاریخ پایان را به فرمت زیر وارد کنید:\n\n";
             $text .= " فرمت قمری : <code>2024-02-15</code>\n";
             $text .= "یا به فرمت شمسی: <code>1404/05/06</code>\n\n";
-            
+
             $keyboard = [
                 [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
                 [['text' => '❌ لغو', 'callback_data' => 'cancel']]
