@@ -53,6 +53,39 @@ class BotHandler
 
         public function handleCallbackQuery($callbackQuery): void
         {
+        $callbackData = $callbackQuery["data"] ?? null;
+        $chatId = $callbackQuery["message"]["chat"]["id"] ?? null;
+        $callbackQueryId = $callbackQuery["id"] ?? null;
+        $messageId = $callbackQuery["message"]["message_id"] ?? null;
+        $state = $this->fileHandler->getState($chatId);
+
+
+    if (!$callbackData || !$chatId || !$callbackQueryId || !$messageId) {
+        error_log("اطلاعات مورد نیاز در کالبک وجود ندارد: callbackData=$callbackData, chatId=$chatId, callbackQueryId=$callbackQueryId, messageId=$messageId");
+        return;
+        
+    } elseif (str_starts_with($callbackData, 'create_customer')) {
+        $text = "📋 لطفاً وضعیت مشتری را انتخاب کنید:";
+
+        $keyboard = [
+            [['text' => 'فعال', 'callback_data' => 'customer_status_active']],
+            [['text' => 'غیرفعال', 'callback_data' => 'customer_status_inactive']],
+            [['text' => '🔙 بازگشت', 'callback_data' => 'cancel']]
+        ];
+
+        $this->fileHandler->saveState($chatId, "waiting_customer_creation_status");
+        $this->fileHandler->saveMessageId($chatId, $messageId);
+
+        $this->sendRequest('editMessageText', [
+            'chat_id' => $chatId,
+            'message_id' => $messageId,
+            'text' => $text,
+            'parse_mode' => 'HTML',
+            'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+        ]);
+    } else {
+        error_log("حالت یا کالبک ناشناخته: state=$state, callbackData=$callbackData");
+    }
 
         if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
             $text = "📝 لطفاً نام کامل مشتری را وارد کنید:";
@@ -472,38 +505,6 @@ if ($state == 'witting_customer_creation_number') {
     ]);
     return;
 }
-        $callbackData = $callbackQuery["data"] ?? null;
-        $chatId = $callbackQuery["message"]["chat"]["id"] ?? null;
-        $callbackQueryId = $callbackQuery["id"] ?? null;
-        $messageId = $callbackQuery["message"]["message_id"] ?? null;
-
-    if (!$callbackData || !$chatId || !$callbackQueryId || !$messageId) {
-        error_log("اطلاعات مورد نیاز در کالبک وجود ندارد: callbackData=$callbackData, chatId=$chatId, callbackQueryId=$callbackQueryId, messageId=$messageId");
-        return;
-        
-    } elseif (str_starts_with($callbackData, 'create_customer')) {
-        $text = "📋 لطفاً وضعیت مشتری را انتخاب کنید:";
-
-        $keyboard = [
-            [['text' => 'فعال', 'callback_data' => 'customer_status_active']],
-            [['text' => 'غیرفعال', 'callback_data' => 'customer_status_inactive']],
-            [['text' => '🔙 بازگشت', 'callback_data' => 'cancel']]
-        ];
-
-        $this->fileHandler->saveState($chatId, "waiting_customer_creation_status");
-        $this->fileHandler->saveMessageId($chatId, $messageId);
-
-        $this->sendRequest('editMessageText', [
-            'chat_id' => $chatId,
-            'message_id' => $messageId,
-            'text' => $text,
-            'parse_mode' => 'HTML',
-            'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-        ]);
-    } else {
-        error_log("حالت یا کالبک ناشناخته: state=$state, callbackData=$callbackData");
-    }
-
             $this->fileHandler->saveState($chatId, "waiting_customer_creation_status");
             return;
          if (str_starts_with($callbackData, 'manual_date_input')) {
