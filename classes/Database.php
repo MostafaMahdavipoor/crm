@@ -501,16 +501,5 @@ class Database
         }
         
     }
-    public function getCustomersByDateRange($adminChatId, $startDate, $endDate)
-{
-    $sql = "SELECT * FROM customers 
-            WHERE admin_chat_id = ? 
-            AND DATE(created_at) BETWEEN ? AND ? 
-            ORDER BY created_at DESC";
-    
-    $stmt = $this->pdo->prepare($sql);
-    $stmt->execute([$adminChatId, $startDate, $endDate]);
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
 
 }
