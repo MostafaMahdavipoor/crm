@@ -57,8 +57,6 @@ class BotHandler
         $chatId = $callbackQuery["message"]["chat"]["id"] ?? null;
         $callbackQueryId = $callbackQuery["id"] ?? null;
         $messageId = $callbackQuery["message"]["message_id"] ?? null;
-        $state = $this->fileHandler->getState($chatId);
-
 
     if (!$callbackData || !$chatId || !$callbackQueryId || !$messageId) {
         error_log("اطلاعات مورد نیاز در کالبک وجود ندارد: callbackData=$callbackData, chatId=$chatId, callbackQueryId=$callbackQueryId, messageId=$messageId");
@@ -84,7 +82,7 @@ class BotHandler
             'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
         ]);
     } else {
-        error_log("حالت یا کالبک ناشناخته: state=$state, callbackData=$callbackData");
+        error_log("حالت یا کالبک ناشناخته: callbackData=$callbackData");
     }
 
         if (str_starts_with($callbackData, 'customer_creation') || str_starts_with($callbackData, 'back_name')) {
@@ -160,13 +158,6 @@ class BotHandler
     $keyboard[] = [['text' => '🔙 بازگشت به لیست مشتریان', 'callback_data' => 'list_customers_page_1']];
     $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
     $this->sendRequest('editMessageText', [
-        'chat_id' => $chatId,
-        'message_id' => $messageId,
-        'text' => $text,
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-    ]);
-    return;
- $this->sendRequest('editMessageText', [
         'chat_id' => $chatId,
         'message_id' => $messageId,
         'text' => $text,
@@ -304,7 +295,7 @@ class BotHandler
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
 
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
-                     "\n<blockquote dir='rtl'>  شماره تماس: $numberCustomer</blockquote>" .
+                     "\n<blockquote dir='rtl'>  شماره تماس: $numberCustomer</blockquote>" .
                      "📞 لطفاً ایمیل مشتری جدید را وارد کنید:\n" .
                      "🔑 ایمیل برای ارتباط با مشتری کاربردی است. لطفاً ایمیل را با دقت وارد کنید.";
 
@@ -399,6 +390,27 @@ class BotHandler
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
             ]);
+        } elseif (str_starts_with($callbackData, 'manual_date_input')) {
+            $text = "📅 لطفاً تاریخ شروع را به فرمت زیر وارد کنید:\n\n";
+            $text .= " فرمت قمری : <code>2024-01-15</code>\n";
+            $text .= "یا به فرمت شمسی: <code>1403/01/25</code>\n\n";
+            $text .= "پس از وارد کردن تاریخ شروع، تاریخ پایان را نیز خواهم پرسید.";
+
+            $keyboard = [
+                [['text' => '🔙 بازگشت', 'callback_data' => 'show_dates_panel']],
+                [['text' => '❌ لغو', 'callback_data' => 'cancel']]
+            ];
+
+            $this->fileHandler->saveState($chatId, "waiting_start_date");
+            $this->fileHandler->saveMessageId($chatId, $messageId);
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $chatId,
+                'message_id' => $messageId,
+                'text' => $text,
+                'parse_mode' => 'HTML', // فعال کردن فرمت HTML
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+            ]);
         }
     }
 
@@ -431,6 +443,40 @@ class BotHandler
         
 // از اینجا به بعد، کدهای مربوط به مدیریت درخواست‌ها را اضافه می‌کنیم
 
+        if ($state == 'waiting_start_date') {
+            $startDate = $this->text;
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
+
+            if (!$this->isValidDate($startDate)) {
+                $this->sendRequest('sendMessage', [
+                    'chat_id' => $this->chatId,
+                    'text' => "❌ فرمت تاریخ اشتباه است. لطفاً به فرمت <code>YYYY-MM-DD</code> یا <code>1403/01/25</code> وارد کنید.",
+                    'parse_mode' => 'HTML'
+                ]);
+                return;
+            }
+
+            $this->fileHandler->saveStartDate($this->chatId, $startDate);
+            $this->fileHandler->saveState($this->chatId, "waiting_end_date");
+
+            $text = "📅 تاریخ شروع: <code>$startDate</code>\n\n";
+            $text .= "حالا لطفاً تاریخ پایان را وارد کنید:";
+
+            $keyboard = [
+                [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
+                [['text' => '❌ لغو', 'callback_data' => 'cancel']]
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'parse_mode' => 'HTML',
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+            ]);
+            return;
+        }
 
         if ($state == 'witting_customer_creation_name') {
             $nameCustomer = $this->text;
@@ -463,207 +509,145 @@ class BotHandler
             return; // Added return
         }
 
-if ($state == 'witting_customer_creation_number') {
-    $numberCustomer = $this->text;
-    if (!preg_match('/^09\d{9}$/', $numberCustomer)) {
-        $this->sendRequest('sendMessage', [
-            'chat_id' => $this->chatId,
-            'text' => "❌ شماره تماس وارد شده معتبر نیست. لطفاً شماره‌ای با فرمت صحیح وارد کنید. (مثال: 09345678912)",
-        ]);
-        return;
-    }
-    
-    $name = $this->fileHandler->getNameCustomer($this->chatId);
-    $messageId = $this->fileHandler->getMessageId($this->chatId);
-    $this->deleteMessageWithDelay();
-    $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
-    $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
+        if ($state == 'witting_customer_creation_number') {
+            $numberCustomer = $this->text;
+            if (!preg_match('/^09\d{9}$/', $numberCustomer)) {
+                $this->sendRequest('sendMessage', [
+                    'chat_id' => $this->chatId,
+                    'text' => "❌ شماره تماس وارد شده معتبر نیست. لطفاً شماره‌ای با فرمت صحیح وارد کنید. (مثال: 09345678912)",
+                ]);
+                return;
+            }
+            
+            $name = $this->fileHandler->getNameCustomer($this->chatId);
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
+            $this->fileHandler->savePhoneCustomer($this->chatId, $numberCustomer);
+            $this->fileHandler->saveState($this->chatId, "witting_customer_creation_email");
 
-    $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
-        "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
-        "📞 لطفاً ایمیل مشتری جدید را وارد کنید:\n" .
-        "🔑 ایمیل برای ارتباط با مشتری کاربردی است. لطفاً ایمیل را با دقت وارد کنید.";
+            $text = "<blockquote dir='rtl'>نام مشتری : $name</blockquote>" .
+                "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
+                "📞 لطفاً ایمیل مشتری جدید را وارد کنید:\n" .
+                "🔑 ایمیل برای ارتباط با مشتری کاربردی است. لطفاً ایمیل را با دقت وارد کنید.";
 
-    $keyboard = [
-        [['text' => '✉️ رد کردن مرحله ایمیل', 'callback_data' => 'skip_email']],
-        [
-            ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
-            ['text' => '🔙 بازگشت', 'callback_data' => 'back_number']
-        ]
-    ];
-
-    $reply_markup = [
-        'inline_keyboard' => $keyboard
-    ];
-
-    $this->sendRequest('editMessageText', [
-        'chat_id' => $this->chatId,
-        'text' => $text,
-        'message_id' => $messageId,
-        'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
-        'parse_mode' => 'HTML'
-    ]);
-    return;
-}
-            $this->fileHandler->saveState($chatId, "waiting_customer_creation_status");
-            return;
-         if (str_starts_with($callbackData, 'manual_date_input')) {
-        $text = "📅 لطفاً تاریخ شروع را به فرمت زیر وارد کنید:\n\n";
-        $text .= " فرمت قمری : <code>2024-01-15</code>\n";
-        $text .= "یا به فرمت شمسی: <code>1403/01/25</code>\n\n";
-        $text .= "پس از وارد کردن تاریخ شروع، تاریخ پایان را نیز خواهم پرسید.";
-
-        $keyboard = [
-            [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
-            [['text' => '❌ لغو', 'callback_data' => 'cancel']]
-        ];
-
-        $this->fileHandler->saveState($chatId, "waiting_start_date");
-        $this->fileHandler->saveMessageId($chatId, $messageId);
-
-        $this->sendRequest('editMessageText', [
-            'chat_id' => $chatId,
-            'message_id' => $messageId,
-            'text' => $text,
-            'parse_mode' => 'HTML', // فعال کردن فرمت HTML
-            'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-        ]);
-    } 
-    if ($state === 'waiting_end_date') {
-        $endDate = $this->text;
-        $startDate = $this->fileHandler->getStartDate($this->chatId);
-        $messageId = $this->fileHandler->getMessageId($this->chatId);
-        $this->deleteMessageWithDelay();
-
-    if (!$this->isValidDate($startDate)) {
-        $this->sendRequest('sendMessage', [
-            'chat_id' => $this->chatId,
-            'text' => "❌ فرمت تاریخ اشتباه است. لطفاً به فرمت <code>YYYY-MM-DD</code> یا <code>1403/01/25</code> وارد کنید.",
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
-
-    $this->fileHandler->saveStartDate($this->chatId, $startDate);
-    $this->fileHandler->saveState($this->chatId, "waiting_end_date");
-
-    $text = "📅 تاریخ شروع: <code>$startDate</code>\n\n";
-    $text .= "حالا لطفاً تاریخ پایان را وارد کنید:";
-
-    $keyboard = [
-        [['text' => '🔙 بازگشت', 'callback_data' => 'manual_date_input']],
-        [['text' => '❌ لغو', 'callback_data' => 'cancel']]
-    ];
-
-    $this->sendRequest('editMessageText', [
-        'chat_id' => $this->chatId,
-        'text' => $text,
-        'message_id' => $messageId,
-        'parse_mode' => 'HTML',
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-    ]);
-    return;
-}
-
-if ($state === 'waiting_end_date') {
-    $endDate = $this->text;
-    $startDate = $this->fileHandler->getStartDate($this->chatId);
-    $messageId = $this->fileHandler->getMessageId($this->chatId);
-    $this->deleteMessageWithDelay();
-
-    if (!$this->isValidDate($endDate)) {
-        $this->sendRequest('sendMessage', [
-            'chat_id' => $this->chatId,
-            'text' => "❌ فرمت تاریخ اشتباه است. لطفاً به فرمت <code>YYYY-MM-DD</code> یا <code>1403/01/25</code> وارد کنید.",
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
-
-    if (strtotime($endDate) < strtotime($startDate)) {
-        $this->sendRequest('sendMessage', [
-            'chat_id' => $this->chatId,
-            'text' => "❌ تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.",
-            'parse_mode' => 'HTML'
-        ]);
-        return;
-    }
-
-    $customersByDate = $this->db->getCustomersByDateRange($this->chatId, $startDate, $endDate);
-
-    $text = "📋 مشتریان ثبت شده از <code>$startDate</code> تا <code>$endDate</code>:\n";
-    $keyboard = [];
-
-    if (empty($customersByDate)) {
-        $text .= "هیچ مشتری در این بازه زمانی ثبت نشده است.";
-    } else {
-        foreach ($customersByDate as $customer) {
-            $keyboard[] = [
+            $keyboard = [
+                [['text' => '✉️ رد کردن مرحله ایمیل', 'callback_data' => 'skip_email']],
                 [
-                    'text' => $customer['name'] . " (" . $this->getStatusText($customer['status']) . ")",
-                    'callback_data' => 'customer_' . $customer['id']
+                    ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
+                    ['text' => '🔙 بازگشت', 'callback_data' => 'back_number']
                 ]
             ];
-        }
-    }
 
-    $keyboard[] = [['text' => '🔍 جستجوی بازه جدید', 'callback_data' => 'manual_date_input']];
-    $keyboard[] = [['text' => '🔙 بازگشت به پنل تاریخ‌ها', 'callback_data' => 'show_dates_panel']];
-    $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
 
-    $this->fileHandler->saveState($this->chatId, "");
-
-    $this->sendRequest('editMessageText', [
-        'chat_id' => $this->chatId,
-        'text' => $text,
-        'message_id' => $messageId,
-        'parse_mode' => 'HTML',
-        'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-    ]);
-    return;
-}
-
-        if (strtotime($endDate) < strtotime($startDate)) {
-            $this->sendRequest('sendMessage', [
-                'chat_id' => $chatId,
-                'text' => "❌ تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.",
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
             ]);
             return;
         }
 
-        $customersByDate = $this->db->getCustomersByDateRange($chatId, $startDate, $endDate);
+        if ($state === 'waiting_end_date') {
+            $endDate = $this->text;
+            $startDate = $this->fileHandler->getStartDate($this->chatId);
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
 
-        $text = "📋 مشتریان ثبت شده از <code>$startDate</code> تا <code>$endDate</code>:\n";
-        $keyboard = [];
-
-        if (empty($customersByDate)) {
-            $text .= "هیچ مشتری در این بازه زمانی ثبت نشده است.";
-        } else {
-            foreach ($customersByDate as $customer) {
-                $keyboard[] = [
-                    [
-                        'text' => $customer['name'] . " (" . $this->getStatusText($customer['status']) . ")",
-                        'callback_data' => 'customer_' . $customer['id']
-                    ]
-                ];
+            if (!$this->isValidDate($endDate)) {
+                $this->sendRequest('sendMessage', [
+                    'chat_id' => $this->chatId,
+                    'text' => "❌ فرمت تاریخ اشتباه است. لطفاً به فرمت <code>YYYY-MM-DD</code> یا <code>1403/01/25</code> وارد کنید.",
+                    'parse_mode' => 'HTML'
+                ]);
+                return;
             }
+
+            if (strtotime($endDate) < strtotime($startDate)) {
+                $this->sendRequest('sendMessage', [
+                    'chat_id' => $this->chatId,
+                    'text' => "❌ تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.",
+                    'parse_mode' => 'HTML'
+                ]);
+                return;
+            }
+
+            $customersByDate = $this->db->getCustomersByDateRange($this->chatId, $startDate, $endDate);
+
+            $text = "📋 مشتریان ثبت شده از <code>$startDate</code> تا <code>$endDate</code>:\n";
+            $keyboard = [];
+
+            if (empty($customersByDate)) {
+                $text .= "هیچ مشتری در این بازه زمانی ثبت نشده است.";
+            } else {
+                foreach ($customersByDate as $customer) {
+                    $keyboard[] = [
+                        [
+                            'text' => $customer['name'] . " (" . $this->getStatusText($customer['status']) . ")",
+                            'callback_data' => 'customer_' . $customer['id']
+                        ]
+                    ];
+                }
+            }
+
+            $keyboard[] = [['text' => '🔍 جستجوی بازه جدید', 'callback_data' => 'manual_date_input']];
+            $keyboard[] = [['text' => '🔙 بازگشت به پنل تاریخ‌ها', 'callback_data' => 'show_dates_panel']];
+            $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
+
+            $this->fileHandler->saveState($this->chatId, "");
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'parse_mode' => 'HTML',
+                'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+            ]);
+            return;
         }
 
-        $keyboard[] = [['text' => '🔍 جستجوی بازه جدید', 'callback_data' => 'manual_date_input']];
-        $keyboard[] = [['text' => '🔙 بازگشت به پنل تاریخ‌ها', 'callback_data' => 'show_dates_panel']];
-        $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
+        if ($state == 'witting_customer_creation_email') {
+            $emailCustomer = $this->text;
+            $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
+            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
+            $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
+            $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status");
 
-        $this->fileHandler->saveState($chatId, "");
+            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
+                     "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
+                     "\n<blockquote dir='rtl'>ایمیل: $emailCustomer</blockquote>" .
+                     "لطفاً وضعیت مشتری را انتخاب کنید:\n" .
+                     " وضعیت مشتری می‌تواند یکی از گزینه‌های زیر باشد:";
 
-        $this->sendRequest('editMessageText', [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'message_id' => $messageId,
-            'parse_mode' => 'HTML',
-            'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-        ]);
+            $keyboard = [
+                [['text' => '❄️ سرد', 'callback_data' => 'cold']],
+                [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
+                [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
+                [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
+                [['text' => '🔙 بازگشت', 'callback_data' => 'back_email']],
+            ];
+
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'HTML'
+            ]);
+            return;
+        }
     }
+    
     private function showMainMenu($chatId, $messageId = null): void
     {
         $text = "👋 به سیستم مدیریت مشتری خوش اومدی!\nاز منوی زیر یکی از گزینه‌ها رو انتخاب کن:";
@@ -696,7 +680,6 @@ if ($state === 'waiting_end_date') {
             ]);
         }
     }
-
 
     public function sendRequest($method, $data)
     {
@@ -736,19 +719,18 @@ if ($state === 'waiting_end_date') {
             'curl_error' => $curlError
         ];
     }
-private function isValidDate($date): bool
-{
-   if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-        $d = DateTime::createFromFormat('Y-m-d', $date);
-        return $d && $d->format('Y-m-d') === $date;
-    }
-     if (preg_match('/^\d{4}\/\d{2}\/\d{2}$/', $date)) {
-       return true; 
-    }
     
-    return false;
-}
-
-
+    private function isValidDate($date): bool
+    {
+       if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            $d = DateTime::createFromFormat('Y-m-d', $date);
+            return $d && $d->format('Y-m-d') === $date;
+        }
+         if (preg_match('/^\d{4}\/\d{2}\/\d{2}$/', $date)) {
+           return true; 
+        }
+        
+        return false;
+    }
 }
 ?>
