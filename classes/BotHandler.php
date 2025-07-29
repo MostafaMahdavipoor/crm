@@ -449,7 +449,7 @@ class BotHandler
                 ['text' => '🗓️ نمایش بر اساس تاریخ', 'callback_data' => 'show_dates_panel'],
                 ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
             ];
-            $keyboard[] = [['text' => 'جستجوی مشتریان', 'callback_data' => 'search_customers']];
+            $keyboard[] = [['text' => '🔍 جستجوی مشتری (Inline)', 'switch_inline_query_current_chat' => '']];
             $keyboard[] = [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']];
 
             $this->sendRequest('editMessageText', [
@@ -460,7 +460,8 @@ class BotHandler
             ]);
 
             return;
-        } elseif (str_starts_with($callbackData, 'back_number')) {
+        
+        }elseif (str_starts_with($callbackData, 'back_number')) {
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number"); // Set state to allow re-entering number
 
