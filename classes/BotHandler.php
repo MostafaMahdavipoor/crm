@@ -179,7 +179,8 @@ class BotHandler
                      ", End TS: " . ($endTimestamp === false ? 'FALSE' : $endTimestamp));
                      error_log("DEBUG: User Data after saving Start Date: " . json_encode($userData['customer_search']) . " for chat_id: " . $this->chatId);
                      error_log("INFO: Start Date Saved for chat_id: " . $this->chatId . " - Date: " . $gregorianDateForDb);
-
+                     error_log("DEBUG: Verifying saved start_date for chat_id: " . $this->chatId . " - From userData: " . ($userData['customer_search']['start_date'] ?? 'NOT SET'));
+                   
                      if ($startTimestamp === false || $endTimestamp === false) {
                          error_log("ERROR: Invalid timestamps for chat_id: " . $this->chatId);
                          $this->answerCallbackQuery("❌ خطا: تاریخ‌های وارد شده نامعتبر هستند.", true);
