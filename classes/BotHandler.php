@@ -163,7 +163,26 @@ class BotHandler
                     }
                     $startDate = $searchData['start_date'];
                     $endDate = $gregorianDateForDb;
-                    error_log("DEBUG: End Date Confirmed for chat_id: " . $this->chatId . " - Start: " . $startDate . ", End: " . $endDate);
+                     error_log("DEBUG: Dates going into strtotime for chat_id: " . $this->chatId . 
+                    " - Start Date String: '" . $startDate . "'" . 
+                    " (Length: " . strlen($startDate) . ", Type: " . gettype($startDate) . ")" .
+                    ", End Date String: '" . $endDate . "'" .
+                    " (Length: " . strlen($endDate) . ", Type: " . gettype($endDate) . ")");
+                
+                      error_log("DEBUG: Hex dump of dates for chat_id: " . $this->chatId .
+                    " - Start (Hex): " . bin2hex($startDate) .
+                    ", End (Hex): " . bin2hex($endDate));
+                     $startTimestamp = strtotime($startDate);
+                     $endTimestamp = strtotime($endDate);
+                      error_log("DEBUG: Timestamps after strtotime for chat_id: " . $this->chatId . 
+                     " - Start TS: " . ($startTimestamp === false ? 'FALSE' : $startTimestamp) . 
+                     ", End TS: " . ($endTimestamp === false ? 'FALSE' : $endTimestamp));
+
+                     if ($startTimestamp === false || $endTimestamp === false) {
+                         error_log("ERROR: Invalid timestamps for chat_id: " . $this->chatId);
+                         $this->answerCallbackQuery("❌ خطا: تاریخ‌های وارد شده نامعتبر هستند.", true);
+                         return;
+                     }
 
                     if (strtotime($endDate) < strtotime($startDate)) {
                         error_log("WARNING: End date was before start date for chat_id: " . $this->chatId);
