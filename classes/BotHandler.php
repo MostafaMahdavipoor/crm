@@ -185,17 +185,22 @@ class BotHandler
                          error_log("ERROR: Invalid timestamps for chat_id: " . $this->chatId);
                          $this->answerCallbackQuery("❌ خطا: تاریخ‌های وارد شده نامعتبر هستند.", true);
                          return;
-                     }
-
-                    if (strtotime($endDate) < strtotime($startDate)) {
+                    }
+                    if ($endTimestamp < $startTimestamp) {
                         error_log("WARNING: End date was before start date for chat_id: " . $this->chatId);
-                        $this->answerCallbackQuery("⚠️ تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد!", true);
-                            $this->sendRequest("sendMessage", [
-                        "chat_id" => $this->chatId,
-                        "text" => "❌ **خطا:** تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد. لطفاً دوباره تاریخ‌ها را انتخاب کنید.",
-                        "parse_mode" => "Markdown" // یا HTML
-                    ]);
-                       error_log("DEBUG: answerCallbackQuery for end date error sent for chat_id: " . $this->chatId);
+                        $this->answerCallbackQuery("⚠️ تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد!", true); 
+                        $keyboard = [
+                            [['text' => '🔄 شروع دوباره انتخاب تاریخ', 'callback_data' => 'manual_date_input']],
+                            [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
+                        ];
+
+                        $this->sendRequest("editMessageText", [
+                            "chat_id" => $this->chatId,
+                            "message_id" => $messageId, 
+                            "text" => "❌ **خطا:** تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد. لطفاً از دکمه‌های زیر استفاده کنید:",
+                            "parse_mode" => "Markdown",
+                            "reply_markup" => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+                        ]);
                         return;
                     }
 
