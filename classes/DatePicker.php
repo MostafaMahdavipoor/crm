@@ -4,9 +4,6 @@ namespace Bot;
 
 require_once __DIR__ . "/jdf.php";
 
-use function Config\jdate;
-use function Config\gregorian_to_jalali;
-
 
 class DatePicker
 {
