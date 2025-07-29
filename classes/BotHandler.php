@@ -71,6 +71,49 @@ class BotHandler
             error_log("اطلاعات مورد نیاز در کالبک وجود ندارد: callbackData=$callbackData, chatId=$chatId, callbackQueryId=$callbackQueryId, messageId=$messageId");
             return;
 
+        } elseif (str_starts_with($callbackData, 'show_customer_details_')) {
+            $customerId = (int)str_replace('show_customer_details_', '', $callbackData);
+            error_log("INFO: User " . $chatId . " requested customer details for ID: " . $customerId);
+
+            $customer = $this->db->getCustomersbyId($customerId); 
+
+            if ($customer) {
+                $text = "📋 **اطلاعات مشتری:**\n\n" .
+                        "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
+                        "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
+                        "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
+                        "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
+                        "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
+                        "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
+                
+                $keyboard = [
+                    [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
+                    [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
+                ];
+
+                $this->sendRequest("editMessageText", [
+                    "chat_id" => $chatId,
+                    "message_id" => $messageId,
+                    "text" => $text,
+                    "parse_mode" => "HTML",
+                    "reply_markup" => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+                ]);
+            } else {
+                $this->sendRequest("editMessageText", [
+                    "chat_id" => $chatId,
+                    "message_id" => $messageId,
+                    "text" => "❌ مشتری مورد نظر یافت نشد.",
+                    "reply_markup" => json_encode(['inline_keyboard' => [[['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]]])
+                ]);
+            }
+            $this->answerCallbackQuery();
+            return;
+
+        } elseif (str_starts_with($callbackData, 'cancel')) {
+            $this->fileHandler->saveState($this->chatId, "");
+            $this->showMainMenu($this->chatId, $messageId);
+        $this->answerCallbackQuery(); 
+    
         } elseif (str_starts_with($callbackData, 'create_customer')) {
             $text = "📋 لطفاً وضعیت مشتری را انتخاب کنید:";
 
@@ -678,7 +721,33 @@ class BotHandler
             ]);
             return;
         }
+
+        if (
+            $textMessage === "/start" ||
+            $textMessage === "بازگشت به منوی اصلی" ||
+            $textMessage === "برگشت به منوی اصلی" ||
+            $textMessage === "/menu"
+        ) {
+            $this->showMainMenu($chatId, $messageId);
+            $this->fileHandler->saveState($chatId, ""); 
+            return;
+        } else {
+            $text = "متاسفم، متوجه درخواست شما نشدم. لطفاً از گزینه‌های موجود استفاده کنید.\n\n" .
+                    "برای جستجوی مشتریان، می‌توانید در هر چتی نام ربات را به همراه کلمه کلیدی تایپ کنید. مثلاً: `@YourBotUsername نام مشتری`";
+
+            $keyboard = [
+                [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
+            ];
+
+            $this->sendRequest("sendMessage", [
+                "chat_id" => $chatId,
+                "text" => $text,
+                "reply_markup" => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+            ]);
+            return;
+        }
     }
+
 
     private function showMainMenu($chatId, $messageId = null): void
     {
@@ -691,6 +760,7 @@ class BotHandler
             [['text' => '🔔 یادآور پیگیری', 'callback_data' => 'set_reminder']],
             [['text' => '📊 گزارش عملکرد', 'callback_data' => 'show_report']],
             [['text' => '⚙️ تنظیمات', 'callback_data' => 'settings_menu']],
+            [['text' => '⚙️ مدیریت', 'callback_data' => 'admin_panel']],
         ];
 
         $reply_markup = [
@@ -711,6 +781,8 @@ class BotHandler
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
         }
+             $this->fileHandler->saveState($chatId, ""); 
+   
     }
 
     public function sendRequest($method, $data)
@@ -778,6 +850,70 @@ class BotHandler
         $parts = explode('-', $date);
         return checkdate($parts[1], $parts[2], $parts[0]);
     }
+        public function handleInlineQuery($inlineQuery): void
+    {
+        $inlineQueryId = $inlineQuery['id'];
+        $queryText = trim($inlineQuery['query']);
+        $results = [];
+
+        error_log("INFO: Inline Query received from user " . $inlineQuery['from']['id'] . " with query: " . $queryText);
+
+        if (!empty($queryText)) {
+            // فراخوانی متد جستجوی مشتریان از کلاس DB
+            $customers = $this->db->searchCustomers($queryText, 10); // 10 نتیجه اول
+
+            foreach ($customers as $customer) {
+                $descriptionPreview = "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A');
+                if (!empty($customer['phone'])) {
+                    $descriptionPreview .= " | تلفن: " . htmlspecialchars($customer['phone']);
+                }
+
+                $results[] = [
+                    'type' => 'article',
+                    'id' => uniqid(), 
+                    'title' => htmlspecialchars($customer['name']),
+                    'description' => $descriptionPreview,
+                    'input_message_content' => [
+                        'message_text' => "📋 **اطلاعات مشتری:**\n\n" .
+                                          "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
+                                          "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
+                                          "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
+                                          "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
+                                          "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
+                                          "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد'),
+                        'parse_mode' => 'HTML'
+                    ],
+                    'reply_markup' => [
+                        'inline_keyboard' => [
+                            [['text' => 'مشاهده جزئیات کامل', 'callback_data' => 'show_customer_details_' . $customer['id']]]
+                        ]
+                    ],
+               ];
+            }
+        } else {
+            $results[] = [
+                'type' => 'article',
+                'id' => uniqid(),
+                'title' => '🔎 شروع جستجوی مشتریان',
+                'description' => 'نام، شماره تماس یا ایمیل مشتری را وارد کنید.',
+                'input_message_content' => [
+                    'message_text' => 'با استفاده از Inline Mode، می‌توانید مشتریان را بر اساس نام، شماره تماس یا ایمیل جستجو کنید.'
+                ],
+                'reply_markup' => [
+                    'inline_keyboard' => [
+                        [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
+                    ]
+                ]
+            ];
+        }
+
+        $this->sendRequest("answerInlineQuery", [
+            'inline_query_id' => $inlineQueryId,
+            'results' => json_encode($results, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'cache_time' => 0 // برای نمایش نتایج زنده، کش را کم کنید
+        ]);
+    }
+
 }
 
 ?>

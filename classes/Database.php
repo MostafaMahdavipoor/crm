@@ -310,23 +310,7 @@ class Database
         $stmt->close();
         return $customers;
     }
-    
-    public function getCustomersbyId($customerId){
-        $stmt = $this->mysqli->prepare("SELECT * FROM customers WHERE id = ? LIMIT 1");
-        if (!$stmt) {
-            error_log("❌ Prepare failed for getCustomersbyId: " . $this->mysqli->error);
-            return [];
-        }
-        $stmt->bind_param("i", $customerId);
-        if (!$stmt->execute()) {
-            error_log("❌ Execute failed for getCustomersbyId: " . $stmt->error);
-            return [];
-        }
-        $result = $stmt->get_result();
-        $customer = $result->fetch_assoc();
-        $stmt->close();
-        return $customer;
-    }
+
 
    public function getUniqueCustomerRegistrationDates($adminChatId){
         $dates = [];
@@ -522,4 +506,128 @@ public function getCustomersByDateRange(int $adminChatId, string $startDate, str
         return [];
     }
 }
+ public function searchItems(?string $searchQuery = null, int $limit = 5, int $offset = 0): array
+    {
+        $query = "SELECT id, title, description, image_telegram_file_id FROM items";
+        $conditions = [];
+        $params = [];
+        $types = ""; // برای bind_param
+
+        if ($searchQuery !== null && $searchQuery !== '') {
+            $conditions[] = "(LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))";
+            $params[] = '%' . $searchQuery . '%';
+            $params[] = '%' . $searchQuery . '%';
+            $types .= "ss"; // دو رشته (string)
+        }
+
+        if (!empty($conditions)) {
+            $query .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $query .= " ORDER BY title ASC LIMIT ? OFFSET ?";
+        $params[] = $limit;
+        $params[] = $offset;
+        $types .= "ii"; // دو عدد صحیح (integer)
+
+        $stmt = $this->mysqli->prepare($query);
+        if (!$stmt) {
+            error_log("❌ Prepare failed for searchItems: " . $this->mysqli->error);
+            return [];
+        }
+
+        // اگر پارامترها وجود دارند، آنها را بایند کنید
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        if (!$stmt->execute()) {
+            error_log("❌ Execute failed for searchItems: " . $stmt->error);
+            return [];
+        }
+
+        $result = $stmt->get_result();
+        $items = $result->fetch_all(\MYSQLI_ASSOC);
+        $stmt->close();
+        return $items;
+    }
+public function getItemById(int $id): ?array
+    {
+        $query = "SELECT id, title, description, image_telegram_file_id, file_url FROM items WHERE id = ?";
+        $stmt = $this->mysqli->prepare($query);
+        if (!$stmt) {
+            error_log("❌ Prepare failed for getItemById: " . $this->mysqli->error);
+            return null;
+        }
+        $stmt->bind_param("i", $id); // i برای integer
+        if (!$stmt->execute()) {
+            error_log("❌ Execute failed for getItemById: " . $stmt->error);
+            return null;
+        }
+        $result = $stmt->get_result();
+        $item = $result->fetch_assoc();
+        $stmt->close();
+        return $item;
+    }
+
+    /**
+     * مشتریان را بر اساس نام، شماره تماس یا ایمیل جستجو می‌کند.
+     *
+     * @param string $searchQuery متن جستجو.
+     * @param int    $limit       حداکثر تعداد نتایج.
+     * @return array              آرایه‌ای از مشتریان یافت شده.
+     */
+    public function searchCustomers(string $searchQuery, int $limit = 10): array
+    {
+        if (empty($searchQuery)) {
+            return [];
+        }
+
+        $query = "SELECT id, name, phone, email, status, note, created_at FROM customers
+                  WHERE LOWER(name) LIKE LOWER(?) OR LOWER(phone) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?)
+                  ORDER BY name ASC LIMIT ?";
+        
+        $stmt = $this->mysqli->prepare($query);
+        if (!$stmt) {
+            error_log("❌ Prepare failed for searchCustomers: " . $this->mysqli->error);
+            return [];
+        }
+
+        $searchParam = '%' . $searchQuery . '%';
+        $stmt->bind_param("sssi", $searchParam, $searchParam, $searchParam, $limit); // sss برای سه رشته، i برای عدد صحیح
+
+        if (!$stmt->execute()) {
+            error_log("❌ Execute failed for searchCustomers: " . $stmt->error);
+            return [];
+        }
+
+        $result = $stmt->get_result();
+        $customers = $result->fetch_all(\MYSQLI_ASSOC);
+        $stmt->close();
+        return $customers;
+    }
+
+    /**
+     * جزئیات یک مشتری خاص را برمی‌گرداند.
+     * این همان متدی است که شما ارائه کردید.
+     *
+     * @param int $customerId شناسه مشتری.
+     * @return array|null آرایه‌ای از جزئیات مشتری یا null اگر یافت نشود.
+     */
+    public function getCustomersbyId($customerId): ?array
+    {
+        $stmt = $this->mysqli->prepare("SELECT * FROM customers WHERE id = ? LIMIT 1");
+        if (!$stmt) {
+            error_log("❌ Prepare failed for getCustomersbyId: " . $this->mysqli->error);
+            return null; // تغییر از [] به null برای consistency با getItemById
+        }
+        $stmt->bind_param("i", $customerId);
+        if (!$stmt->execute()) {
+            error_log("❌ Execute failed for getCustomersbyId: " . $stmt->error);
+            return null; // تغییر از [] به null
+        }
+        $result = $stmt->get_result();
+        $customer = $result->fetch_assoc();
+        $stmt->close();
+        return $customer;
+    }
 }
