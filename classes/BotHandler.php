@@ -177,6 +177,8 @@ class BotHandler
                       error_log("DEBUG: Timestamps after strtotime for chat_id: " . $this->chatId . 
                      " - Start TS: " . ($startTimestamp === false ? 'FALSE' : $startTimestamp) . 
                      ", End TS: " . ($endTimestamp === false ? 'FALSE' : $endTimestamp));
+                     error_log("DEBUG: User Data after saving Start Date: " . json_encode($userData['customer_search']) . " for chat_id: " . $this->chatId);
+                     error_log("INFO: Start Date Saved for chat_id: " . $this->chatId . " - Date: " . $gregorianDateForDb);
 
                      if ($startTimestamp === false || $endTimestamp === false) {
                          error_log("ERROR: Invalid timestamps for chat_id: " . $this->chatId);
