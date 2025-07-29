@@ -190,6 +190,12 @@ class BotHandler
                     if (strtotime($endDate) < strtotime($startDate)) {
                         error_log("WARNING: End date was before start date for chat_id: " . $this->chatId);
                         $this->answerCallbackQuery("⚠️ تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد!", true);
+                            $this->sendRequest("sendMessage", [
+                        "chat_id" => $this->chatId,
+                        "text" => "❌ **خطا:** تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد. لطفاً دوباره تاریخ‌ها را انتخاب کنید.",
+                        "parse_mode" => "Markdown" // یا HTML
+                    ]);
+                       error_log("DEBUG: answerCallbackQuery for end date error sent for chat_id: " . $this->chatId);
                         return;
                     }
 
