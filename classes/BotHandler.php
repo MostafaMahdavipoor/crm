@@ -57,6 +57,8 @@ class BotHandler
             $successfulPayment = $update['message']['successful_payment'];
         }
     }
+    //ازینجا کد میزنیم
+
     public function handleCallbackQuery($callbackQuery): void
     {
         $callbackData = $callbackQuery["data"] ?? null;
@@ -68,82 +70,7 @@ class BotHandler
         if (!$callbackData || !$chatId || !$callbackQueryId || !$messageId) {
             error_log("اطلاعات مورد نیاز در کالبک وجود ندارد: callbackData=$callbackData, chatId=$chatId, callbackQueryId=$callbackQueryId, messageId=$messageId");
             return;
-        } elseif ($callbackData === 'search_customers') {
-            error_log("DEBUG: Item Search Flow Started for chat_id: " . $chatId);
-            $this->fileHandler->saveState($chatId, 'STATE_SEARCHING_ITEMS'); 
 
-            $text = "🔍 برای جستجو در آیتم‌ها، لطفاً عنوان مورد نظر را وارد کنید. (مثلاً: `هوش مصنوعی` یا `پایتون`)\n\n" .
-                    "برای مشاهده همه آیتم‌ها، کلمه `همه` را تایپ کنید.\n" .
-                    "برای لغو جستجو، دستور /cancel را ارسال کنید.";
-            
-            $this->sendRequest("editMessageText", [
-                "chat_id" => $chatId,
-                "message_id" => $messageId,
-                "text" => $text,
-                "parse_mode" => "HTML",
-                "reply_markup" => json_encode(['inline_keyboard' => [[['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]]])
-            ]);
-            $this->answerCallbackQuery(); // جواب به کالبک کوئری
-            return;
-        } 
-        // --- پایان تغییرات برای شروع جستجوی محتوا ---
-
-        // --- شروع تغییرات برای نمایش جزئیات آیتم ---
-        elseif (str_starts_with($callbackData, 'view_item_details_')) {
-            $itemId = (int)str_replace('view_item_details_', '', $callbackData);
-            error_log("INFO: User " . $chatId . " requested item details for ID: " . $itemId);
-
-            $item = $this->db->getItemById($itemId); // فراخوانی متد جدید از کلاس DB
-
-            if ($item) {
-                $text = "📚 **" . htmlspecialchars($item['title']) . "**\n\n" .
-                        "توضیحات: " . htmlspecialchars($item['description'] ?? 'توضیحاتی موجود نیست.') . "\n";
-                if (!empty($item['file_url'])) {
-                    $text .= "لینک دسترسی: " . htmlspecialchars($item['file_url']) . "\n";
-                }
-                
-                $keyboard = [];
-                if (!empty($item['file_url'])) {
-                    $keyboard[] = [['text' => '⬇️ دانلود/مشاهده', 'url' => $item['file_url']]];
-                }
-                $keyboard[] = [['text' => '🔄 جستجوی جدید', 'callback_data' => 'search_customers']]; 
-                $keyboard[] = [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']];
-
-                if (!empty($item['image_telegram_file_id'])) {
-                    // Telegram API cannot change message type (text to photo).
-                    // So, we send a new photo message and then delete the old text message.
-                    $this->sendRequest("sendPhoto", [
-                        "chat_id" => $chatId,
-                        "photo" => $item['image_telegram_file_id'],
-                        "caption" => $text,
-                        "parse_mode" => "HTML",
-                        "reply_markup" => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-                    ]);
-                    // حذف پیام قبلی که شامل لیست نتایج بود
-                    $this->sendRequest("deleteMessage", [
-                        "chat_id" => $chatId,
-                        "message_id" => $messageId
-                    ]);
-
-                } else {
-                    $this->sendRequest("editMessageText", [
-                        "chat_id" => $chatId,
-                        "message_id" => $messageId,
-                        "text" => $text,
-                        "parse_mode" => "HTML",
-                        "reply_markup" => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-                    ]);
-                }
-            } else {
-                $this->sendRequest("editMessageText", [
-                    "chat_id" => $chatId,
-                    "message_id" => $messageId,
-                    "text" => "❌ آیتم مورد نظر یافت نشد.",
-                    "reply_markup" => json_encode(['inline_keyboard' => [[['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]]])
-                ]);
-            }
-            $this->answerCallbackQuery();
-            return;
         } elseif (str_starts_with($callbackData, 'create_customer')) {
             $text = "📋 لطفاً وضعیت مشتری را انتخاب کنید:";
 
@@ -293,7 +220,7 @@ class BotHandler
                             $keyboard[] = [['text' => $customer['name'] . " (" . $this->getStatusText($customer['status']) . ")", 'callback_data' => 'customer_' . $customer['id']]];
                         }
                     }
-                    $keyboard[] = [['text' => '🔍 جستجوی بازه جدید', 'callback_data' => 'search_customers']];
+                    $keyboard[] = [['text' => '🔍 جستجوی بازه جدید', 'callback_data' => 'manual_date_input']];
                     $keyboard[] = [['text' => '🔙 بازگشت به پنل تاریخ‌ها', 'callback_data' => 'show_dates_panel']];
                     $keyboard[] = [['text' => '🔙 بازگشت به منو', 'callback_data' => 'cancel']];
 
