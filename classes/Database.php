@@ -522,4 +522,47 @@ public function getCustomersByDateRange(int $adminChatId, string $startDate, str
         return [];
     }
 }
-}
+  public function searchItems(?string $searchQuery = null, int $limit = 5, int $offset = 0): array
+    {
+        $query = "SELECT id, title, description, image_telegram_file_id FROM items";
+        $conditions = [];
+        $params = [];
+
+        if ($searchQuery !== null && $searchQuery !== '') {
+            $conditions[] = "(LOWER(title) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?))";
+            $params[] = '%' . $searchQuery . '%';
+            $params[] = '%' . $searchQuery . '%';
+        }
+
+        if (!empty($conditions)) {
+            $query .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $query .= " ORDER BY title ASC LIMIT ? OFFSET ?";
+        $params[] = $limit;
+        $params[] = $offset;
+
+        try {
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("DB Error in searchItems: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getItemById(int $id): ?array
+    {
+   $query = "SELECT id, title, description, image_telegram_file_id, file_url FROM items WHERE id = ?";
+        try {
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute([$id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("DB Error in getItemById: " . $e->getMessage());
+            return null;
+        }
+
+    }
+ }
