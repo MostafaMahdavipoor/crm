@@ -83,9 +83,10 @@ class BotHandler
                         "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
                         "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
                         "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
-                        "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد') . "\n" .
-                        "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n";
-                        $keyboard = [
+                        "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
+                        "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
+                
+                $keyboard = [
                     [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
                     [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
                 ];
@@ -304,13 +305,12 @@ class BotHandler
             $customer = $this->db->getCustomersbyId($customerId);
 
             if ($customer) {
-                $text = "📋 **اطلاعات مشتری:**\n";
+                $text = "📋 اطلاعات مشتری:\n";
                 $text .= "نام: " . ($customer['name'] ?? 'N/A') . "\n";
                 $text .= "شماره تماس: " . ($customer['phone'] ?? 'N/A') . "\n";
                 $text .= "ایمیل کاربر: " . ($customer['email'] ?? 'N/A') . "\n";
                 $text .= "وضعیت مشتری: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n";
                 $text .= "یادداشت: " . ($customer['note'] ?? 'ندارد') . "\n";
-                $text .= "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n";
             } else {
                 $text = "❗️ مشتری پیدا نشد.";
             }
@@ -876,18 +876,17 @@ class BotHandler
                     'description' => $descriptionPreview,
                     'input_message_content' => [
                         'message_text' => "📋 **اطلاعات مشتری:**\n\n" .
-                        "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
-                        "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
-                        "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
-                        "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
-                        "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد') . "\n" .
-                        "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n",
+                                          "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
+                                          "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
+                                          "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
+                                          "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
+                                          "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
+                                          "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد'),
                         'parse_mode' => 'HTML'
                     ],
                     'reply_markup' => [
                         'inline_keyboard' => [
-                            [['text' => 'مشاهده جزئیات کامل', 'callback_data' => 'show_customer_details_' . $customer['id']]],
-                            ['text' => '🔙 بازگشت به لیست مشتریان', 'callback_data' => 'list_customers_page_1']
+                            [['text' => 'مشاهده جزئیات کامل', 'callback_data' => 'show_customer_details_' . $customer['id']]]
                         ]
                     ],
                ];
