@@ -20,9 +20,8 @@ if (session_status() === PHP_SESSION_NONE) {
 if (isset($update['inline_query'])) {
     $inlineQuery = $update['inline_query'];
     $query = $inlineQuery['query'];
-
-    $inlineQueryHandler = new InlineQueryHandler();
-    $inlineQueryHandler->handleInlineQuery($inlineQuery);
+    $bot = new BotHandler($chatId, $text, $messageId, $message, null);
+    $bot->handleInlineQuery($inlineQuery);
 } elseif (isset($update['message'])) {
     $message = $update['message'];
     $chatId = $message['chat']['id'];

@@ -72,6 +72,30 @@ class FileHandler
         }
         $this->saveAllData($data);
     }
+ public function saveUser($chatId, $newUserData)
+    {
+        if (!is_numeric($chatId)) {
+            return ;
+        }
+
+        $data = $this->getAllData();
+        $existingUser = $data[$chatId] ?? [];
+
+        foreach ($newUserData as $key => $value) {
+            $existingUser[$key] = $value;
+        }
+
+        $data[$chatId] = $existingUser;
+        $this->saveAllData($data);
+
+        
+    }
+
+    public function getUser($chatId)
+    {
+        $data = $this->getAllData();
+        return $data[$chatId] ?? NULL;
+    }
 
     public function saveMessageId($chatId, $messageId)
     {
@@ -125,7 +149,6 @@ class FileHandler
         return $data[$chatId]['status'] ?? null;
     }
 
-
     public function saveNoteCustomer($chatId, $noteCustomer)
     {
         $data = $this->getAllData();
@@ -150,5 +173,87 @@ class FileHandler
     {
         $data = $this->getAllData();
         return $data[$chatId]['email'] ?? null;
+    }
+
+    public function clearCustomerCreationData($chatId): void
+    {
+        $this->clearNameCustomer($chatId);
+        $this->clearPhoneCustomer($chatId);
+        $this->clearEmailCustomer($chatId);
+        $this->clearStatusCustomer($chatId);
+        $this->clearNoteCustomer($chatId);
+    }
+
+    // متدهای مربوط به تاریخ - اصلاح شده
+    public function saveStartDate($chatId, $startDate)
+    {
+        $data = $this->getAllData();
+        $data[$chatId]['start_date'] = $startDate;
+        $this->saveAllData($data);
+    }
+
+    public function getStartDate($chatId): ?string
+    {
+        $data = $this->getAllData();
+        return $data[$chatId]['start_date'] ?? null;
+    }
+
+    public function saveEndDate($chatId, $endDate): void
+    {
+        $data = $this->getAllData();
+        $data[$chatId]['end_date'] = $endDate;
+        $this->saveAllData($data);
+    }
+
+    public function getEndDate($chatId): ?string
+    {
+        $data = $this->getAllData();
+        return $data[$chatId]['end_date'] ?? null;
+    }
+
+    // متدهای پاک‌سازی که احتمالاً نیاز دارید
+    private function clearNameCustomer($chatId)
+    {
+        $data = $this->getAllData();
+        if (isset($data[$chatId]['name'])) {
+            unset($data[$chatId]['name']);
+        }
+        $this->saveAllData($data);
+    }
+
+    private function clearPhoneCustomer($chatId)
+    {
+        $data = $this->getAllData();
+        if (isset($data[$chatId]['phone'])) {
+            unset($data[$chatId]['phone']);
+        }
+        $this->saveAllData($data);
+    }
+
+    private function clearEmailCustomer($chatId)
+    {
+        $data = $this->getAllData();
+        if (isset($data[$chatId]['email'])) {
+            unset($data[$chatId]['email']);
+        }
+        $this->saveAllData($data);
+    }
+
+    private function clearStatusCustomer($chatId)
+    {
+        $data = $this->getAllData();
+        if (isset($data[$chatId]['status'])) {
+            unset($data[$chatId]['status']);
+        }
+        $this->saveAllData($data);
+    }
+
+    private function clearNoteCustomer($chatId)
+    {
+        $data = $this->getAllData();
+        if (isset($data[$chatId]['note'])) {
+            unset($data[$chatId]['note']);
+        }
+        $this->saveAllData($data);
     }
 }
