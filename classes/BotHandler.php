@@ -63,7 +63,10 @@ class BotHandler
     {
         $callbackData = $callbackQuery["data"] ?? null;
         $chatId = $callbackQuery["message"]["chat"]["id"] ?? null;
-
+if ($chatId === null) {
+    error_log("❌ chatId not found.");
+    return;
+}
         $callbackQueryId = $callbackQuery["id"] ?? null;
         $messageId = $callbackQuery["message"]["message_id"] ?? null;
 
@@ -74,11 +77,13 @@ class BotHandler
         } elseif (str_starts_with($callbackData, 'show_customer_details_')) {
             $customerId = (int)str_replace('show_customer_details_', '', $callbackData);
             error_log("INFO: User " . $chatId . " requested customer details for ID: " . $customerId);
-
-            $customer = $this->db->getCustomersbyId($customerId); 
+            $url = 'https://t.me/Atefetest_bot?start=show_customer_details_' . $customerId;
+            $response = file_get_contents($url);
+            $customer = json_decode($response, true);
+            $customer = $this->db->getCustomersbyId($customerId);
 
             if ($customer) {
-                $text = "📋 **اطلاعات مشتری:**\n\n" .
+                $text = "📋 <b>اطلاعات مشتری:</b>\n\n" .
                         "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
                         "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
                         "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
@@ -607,11 +612,18 @@ class BotHandler
     {
         $state = $this->fileHandler->getState($this->chatId);
 
-        if ($this->text === '/start') {
-            $this->fileHandler->saveState($this->chatId, '');
-            $this->showMainMenu($this->chatId);
-            return; // Added return
-        }
+if (str_starts_with($this->text, "/start ")) {    
+    $token = substr($this->text, 7);
+
+    if (str_starts_with($token, "show_customer_details_")) {
+        $customerId = str_replace("show_customer_details_", "", $token);
+        $this->searchUrl($customerId);
+    }
+    $this->showMainMenu();
+}
+
+
+
         if ($state == 'witting_customer_creation_name') {
             $nameCustomer = $this->text;
             $messageId = $this->fileHandler->getMessageId($this->chatId);
@@ -913,6 +925,46 @@ class BotHandler
             'results' => json_encode($results, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'cache_time' => 0 // برای نمایش نتایج زنده، کش را کم کنید
         ]);
+    }
+    public function searchUrl($customerId)
+    {
+            error_log("INFO: User " . $chatId . " requested customer details for ID: " . $customerId);
+            $url = 'https://t.me/Atefetest_bot?start=show_customer_details_' . $customerId;
+            $response = file_get_contents($url);
+            $customer = json_decode($response, true);
+            $customer = $this->db->getCustomersbyId($customerId);
+
+            if ($customer) {
+                $text = "📋 <b>اطلاعات مشتری:</b>\n\n" .
+                        "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
+                        "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
+                        "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
+                        "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
+                        "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
+                        "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
+                
+                $keyboard = [
+                    [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
+                    [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
+                ];
+
+                $this->sendRequest("editMessageText", [
+                    "chat_id" => $chatId,
+                    "message_id" => $messageId,
+                    "text" => $text,
+                    "parse_mode" => "HTML",
+                    "reply_markup" => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+                ]);
+            } else {
+                $this->sendRequest("editMessageText", [
+                    "chat_id" => $chatId,
+                    "message_id" => $messageId,
+                    "text" => "❌ مشتری مورد نظر یافت نشد.",
+                    "reply_markup" => json_encode(['inline_keyboard' => [[['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]]])
+                ]);
+            }
+            $this->answerCallbackQuery();
+            return;
     }
 
 }
