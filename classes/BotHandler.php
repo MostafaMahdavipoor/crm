@@ -886,7 +886,7 @@ class BotHandler
                     ],
                     'reply_markup' => [
                         'inline_keyboard' => [
-                            [['text' => 'مشاهده جزئیات کامل', 'callback_data' => 'show_customer_details_' . $customer['id']]]
+                            [['text' => 'مشاهده جزئیات کامل', 'callback_data' => 'https://t.me/Atefetest_bot?start=show_customer_details_' . $customer['id']]]
                         ]
                     ],
                ];
