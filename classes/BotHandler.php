@@ -83,13 +83,13 @@ if ($chatId === null) {
             $customer = $this->db->getCustomersbyId($customerId);
 
             if ($customer) {
-                $text = "📋 <b>اطلاعات مشتری:</b>\n\n" .
-                        "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
-                        "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
-                        "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
-                        "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
-                        "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
-                        "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
+                $text = "<b>📋 اطلاعات مشتری:</b>\n";
+                        "<b>نام:</b> " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
+                        "<b>شماره تماس:</b> " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
+                        "<b>ایمیل:</b> " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
+                        "<b>وضعیت:<b> " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
+                        "<b>تاریخ ثبت:</b> " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
+                        "<b>یادداشت:</b> " . htmlspecialchars($customer['note'] ?? 'ندارد');
                 
                 $keyboard = [
                     [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
@@ -310,12 +310,12 @@ if ($chatId === null) {
             $customer = $this->db->getCustomersbyId($customerId);
 
             if ($customer) {
-                $text = "📋 اطلاعات مشتری:\n";
-                $text .= "نام: " . ($customer['name'] ?? 'N/A') . "\n";
-                $text .= "شماره تماس: " . ($customer['phone'] ?? 'N/A') . "\n";
-                $text .= "ایمیل کاربر: " . ($customer['email'] ?? 'N/A') . "\n";
-                $text .= "وضعیت مشتری: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n";
-                $text .= "یادداشت: " . ($customer['note'] ?? 'ندارد') . "\n";
+                $text = "<b>📋 اطلاعات مشتری:</b>\n";
+                $text .= "<b>نام:</b> " . ($customer['name'] ?? 'N/A') . "\n";
+                $text .= "<b>شماره تماس:</b> " . ($customer['phone'] ?? 'N/A') . "\n";
+                $text .= "<b>ایمیل کاربر:</b> " . ($customer['email'] ?? 'N/A') . "\n";
+                $text .= "<b>وضعیت مشتری:</b> " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n";
+                $text .= "<b>یادداشت:</b> " . ($customer['note'] ?? 'ندارد') . "\n";
             } else {
                 $text = "❗️ مشتری پیدا نشد.";
             }
@@ -612,14 +612,17 @@ if ($chatId === null) {
     {
         $state = $this->fileHandler->getState($this->chatId);
 
-if (str_starts_with($this->text, "/start ")) {    
+if (str_starts_with($this->text, "/start")) {    
     $token = substr($this->text, 7);
+    error_log("Token: " . $token);
 
     if (str_starts_with($token, "show_customer_details_")) {
         $customerId = str_replace("show_customer_details_", "", $token);
-        $this->searchUrl($customerId);
+        $this->searchUrl($this->chatId, $customerId);
     }
-    $this->showMainMenu();
+    if($this->text==="/start"){
+    $this->showMainMenu($this->chatId);
+    }
 }
 
 
@@ -887,13 +890,10 @@ if (str_starts_with($this->text, "/start ")) {
                     'title' => htmlspecialchars($customer['name']),
                     'description' => $descriptionPreview,
                     'input_message_content' => [
-                        'message_text' => "📋 **اطلاعات مشتری:**\n\n" .
-                                          "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
-                                          "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
-                                          "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
-                                          "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
-                                          "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
-                                          "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد'),
+                        'message_text' => "📋 <b>اطلاعات مشتری:</b>\n\n" .
+                                          "<b>نام:</b> " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
+                                          "<b>وضعیت:</b> " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
+                                          "<b>تاریخ ثبت:</b> " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" ,
                         'parse_mode' => 'HTML'
                     ],
                     'reply_markup' => [
@@ -926,8 +926,9 @@ if (str_starts_with($this->text, "/start ")) {
             'cache_time' => 0 // برای نمایش نتایج زنده، کش را کم کنید
         ]);
     }
-    public function searchUrl($customerId)
+    public function searchUrl($chatId, $customerId)
     {
+        
             error_log("INFO: User " . $chatId . " requested customer details for ID: " . $customerId);
             $url = 'https://t.me/Atefetest_bot?start=show_customer_details_' . $customerId;
             $response = file_get_contents($url);
@@ -935,30 +936,28 @@ if (str_starts_with($this->text, "/start ")) {
             $customer = $this->db->getCustomersbyId($customerId);
 
             if ($customer) {
-                $text = "📋 <b>اطلاعات مشتری:</b>\n\n" .
-                        "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
-                        "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
-                        "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
-                        "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
-                        "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
-                        "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
+                $text = "<b>📋 اطلاعات مشتری:</b>\n";
+                        "<b>نام:</b> " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
+                        "<b>شماره تماس:</b> " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
+                        "<b>ایمیل:</b> " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
+                        "<b>وضعیت:<b> " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
+                        "<b>تاریخ ثبت:</b> " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
+                        "<b>یادداشت:</b> " . htmlspecialchars($customer['note'] ?? 'ندارد');
                 
                 $keyboard = [
                     [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
                     [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
                 ];
 
-                $this->sendRequest("editMessageText", [
+                $this->sendRequest("sendMessage", [
                     "chat_id" => $chatId,
-                    "message_id" => $messageId,
                     "text" => $text,
                     "parse_mode" => "HTML",
                     "reply_markup" => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
                 ]);
             } else {
-                $this->sendRequest("editMessageText", [
+                $this->sendRequest("sendMessage", [
                     "chat_id" => $chatId,
-                    "message_id" => $messageId,
                     "text" => "❌ مشتری مورد نظر یافت نشد.",
                     "reply_markup" => json_encode(['inline_keyboard' => [[['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]]])
                 ]);
