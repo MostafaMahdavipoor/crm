@@ -57,16 +57,17 @@ class BotHandler
             $successfulPayment = $update['message']['successful_payment'];
         }
     }
+
     //ازینجا کد میزنیم
 
     public function handleCallbackQuery($callbackQuery): void
     {
         $callbackData = $callbackQuery["data"] ?? null;
         $chatId = $callbackQuery["message"]["chat"]["id"] ?? null;
-if ($chatId === null) {
-    error_log("❌ chatId not found.");
-    return;
-}
+        if ($chatId === null) {
+            error_log("❌ chatId not found.");
+            return;
+        }
         $callbackQueryId = $callbackQuery["id"] ?? null;
         $messageId = $callbackQuery["message"]["message_id"] ?? null;
 
@@ -84,13 +85,13 @@ if ($chatId === null) {
 
             if ($customer) {
                 $text = "📋 <b>اطلاعات مشتری:</b>\n\n" .
-                        "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
-                        "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
-                        "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
-                        "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
-                        "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
-                        "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
-                
+                    "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
+                    "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
+                    "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
+                    "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
+                    "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
+                    "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
+
                 $keyboard = [
                     [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
                     [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
@@ -117,8 +118,8 @@ if ($chatId === null) {
         } elseif (str_starts_with($callbackData, 'cancel')) {
             $this->fileHandler->saveState($this->chatId, "");
             $this->showMainMenu($this->chatId, $messageId);
-        $this->answerCallbackQuery(); 
-    
+            $this->answerCallbackQuery();
+
         } elseif (str_starts_with($callbackData, 'create_customer')) {
             $text = "📋 لطفاً وضعیت مشتری را انتخاب کنید:";
 
@@ -211,31 +212,31 @@ if ($chatId === null) {
                     }
                     $startDate = $searchData['start_date'];
                     $endDate = $gregorianDateForDb;
-                     error_log("DEBUG: Dates going into strtotime for chat_id: " . $this->chatId . 
-                    " - Start Date String: '" . $startDate . "'" . 
-                    " (Length: " . strlen($startDate) . ", Type: " . gettype($startDate) . ")" .
-                    ", End Date String: '" . $endDate . "'" .
-                    " (Length: " . strlen($endDate) . ", Type: " . gettype($endDate) . ")");
-                
-                      error_log("DEBUG: Hex dump of dates for chat_id: " . $this->chatId .
-                    " - Start (Hex): " . bin2hex($startDate) .
-                    ", End (Hex): " . bin2hex($endDate));
-                     $startTimestamp = strtotime($startDate);
-                     $endTimestamp = strtotime($endDate);
-                      error_log("DEBUG: Timestamps after strtotime for chat_id: " . $this->chatId . 
-                     " - Start TS: " . ($startTimestamp === false ? 'FALSE' : $startTimestamp) . 
-                     ", End TS: " . ($endTimestamp === false ? 'FALSE' : $endTimestamp));
-                     error_log("DEBUG: User Data after saving Start Date: " . json_encode($userData['customer_search']) . " for chat_id: " . $this->chatId);
-                     error_log("INFO: Start Date Saved for chat_id: " . $this->chatId . " - Date: " . $gregorianDateForDb);
-                     error_log("DEBUG: Verifying saved start_date for chat_id: " . $this->chatId . " - From userData: " . ($userData['customer_search']['start_date'] ?? 'NOT SET'));
-                   
-                     if ($startTimestamp === false || $endTimestamp === false) {
-                       $this->answerCallbackQuery("❌ خطا: تاریخ‌های وارد شده نامعتبر هستند.", true);
-                         return;
+                    error_log("DEBUG: Dates going into strtotime for chat_id: " . $this->chatId .
+                        " - Start Date String: '" . $startDate . "'" .
+                        " (Length: " . strlen($startDate) . ", Type: " . gettype($startDate) . ")" .
+                        ", End Date String: '" . $endDate . "'" .
+                        " (Length: " . strlen($endDate) . ", Type: " . gettype($endDate) . ")");
+
+                    error_log("DEBUG: Hex dump of dates for chat_id: " . $this->chatId .
+                        " - Start (Hex): " . bin2hex($startDate) .
+                        ", End (Hex): " . bin2hex($endDate));
+                    $startTimestamp = strtotime($startDate);
+                    $endTimestamp = strtotime($endDate);
+                    error_log("DEBUG: Timestamps after strtotime for chat_id: " . $this->chatId .
+                        " - Start TS: " . ($startTimestamp === false ? 'FALSE' : $startTimestamp) .
+                        ", End TS: " . ($endTimestamp === false ? 'FALSE' : $endTimestamp));
+                    error_log("DEBUG: User Data after saving Start Date: " . json_encode($userData['customer_search']) . " for chat_id: " . $this->chatId);
+                    error_log("INFO: Start Date Saved for chat_id: " . $this->chatId . " - Date: " . $gregorianDateForDb);
+                    error_log("DEBUG: Verifying saved start_date for chat_id: " . $this->chatId . " - From userData: " . ($userData['customer_search']['start_date'] ?? 'NOT SET'));
+
+                    if ($startTimestamp === false || $endTimestamp === false) {
+                        $this->answerCallbackQuery("❌ خطا: تاریخ‌های وارد شده نامعتبر هستند.", true);
+                        return;
                     }
                     if ($endTimestamp < $startTimestamp) {
                         error_log("WARNING: End date was before start date for chat_id: " . $this->chatId);
-                        $this->answerCallbackQuery("⚠️ تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد!", true); 
+                        $this->answerCallbackQuery("⚠️ تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد!", true);
                         $keyboard = [
                             [['text' => '🔄 شروع دوباره انتخاب تاریخ', 'callback_data' => 'manual_date_input']],
                             [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
@@ -243,7 +244,7 @@ if ($chatId === null) {
 
                         $this->sendRequest("editMessageText", [
                             "chat_id" => $this->chatId,
-                            "message_id" => $messageId, 
+                            "message_id" => $messageId,
                             "text" => "❌ **خطا:** تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد. لطفاً از دکمه‌های زیر استفاده کنید:",
                             "parse_mode" => "Markdown",
                             "reply_markup" => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
@@ -343,7 +344,7 @@ if ($chatId === null) {
 
         } elseif (str_starts_with($callbackData, 'show_dates_panel')) {
             $text = "📅 لطفاً تاریخ مورد نظر را انتخاب کنید:";
-            $uniqueDates = $this->db->getUniqueCustomerRegistrationDates($chatId); 
+            $uniqueDates = $this->db->getUniqueCustomerRegistrationDates($chatId);
 
             $keyboard[] = [
                 ['text' => ' امروز', 'callback_data' => 'filter_date_today'],
@@ -417,7 +418,7 @@ if ($chatId === null) {
             $page = 1;
 
             if (str_starts_with($callbackData, 'list_customers_page_')) {
-                $page = (int) str_replace('list_customers_page_', '', $callbackData);
+                $page = (int)str_replace('list_customers_page_', '', $callbackData);
                 if ($page < 1)
                     $page = 1;
             }
@@ -465,8 +466,8 @@ if ($chatId === null) {
             ]);
 
             return;
-        
-        }elseif (str_starts_with($callbackData, 'back_number')) {
+
+        } elseif (str_starts_with($callbackData, 'back_number')) {
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
             $this->fileHandler->saveState($this->chatId, "witting_customer_creation_number"); // Set state to allow re-entering number
 
@@ -593,6 +594,7 @@ if ($chatId === null) {
         }
 
     }
+
     private function getStatusText($status): string
     {
         switch ($status) {
@@ -612,16 +614,15 @@ if ($chatId === null) {
     {
         $state = $this->fileHandler->getState($this->chatId);
 
-if (str_starts_with($this->text, "/start ")) {    
-    $token = substr($this->text, 7);
+        if (str_starts_with($this->text, "/start")) {
+            $token = substr($this->text, 6);
 
-    if (str_starts_with($token, "show_customer_details_")) {
-        $customerId = str_replace("show_customer_details_", "", $token);
-        $this->searchUrl($customerId);
-    }
-    $this->showMainMenu();
-}
-
+            if (str_starts_with($token, "show_customer_details_")) {
+                $customerId = str_replace("show_customer_details_", "", $token);
+                $this->searchUrl($this->chatId,$customerId);
+            }
+            $this->showMainMenu($this->chatId);
+        }
 
 
         if ($state == 'witting_customer_creation_name') {
@@ -735,30 +736,7 @@ if (str_starts_with($this->text, "/start ")) {
             return;
         }
 
-        if (
-            $textMessage === "/start" ||
-            $textMessage === "بازگشت به منوی اصلی" ||
-            $textMessage === "برگشت به منوی اصلی" ||
-            $textMessage === "/menu"
-        ) {
-            $this->showMainMenu($chatId, $messageId);
-            $this->fileHandler->saveState($chatId, ""); 
-            return;
-        } else {
-            $text = "متاسفم، متوجه درخواست شما نشدم. لطفاً از گزینه‌های موجود استفاده کنید.\n\n" .
-                    "برای جستجوی مشتریان، می‌توانید در هر چتی نام ربات را به همراه کلمه کلیدی تایپ کنید. مثلاً: `@YourBotUsername نام مشتری`";
 
-            $keyboard = [
-                [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
-            ];
-
-            $this->sendRequest("sendMessage", [
-                "chat_id" => $chatId,
-                "text" => $text,
-                "reply_markup" => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-            ]);
-            return;
-        }
     }
 
 
@@ -794,8 +772,8 @@ if (str_starts_with($this->text, "/start ")) {
                 'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE)
             ]);
         }
-             $this->fileHandler->saveState($chatId, ""); 
-   
+        $this->fileHandler->saveState($chatId, "");
+
     }
 
     public function sendRequest($method, $data)
@@ -836,6 +814,7 @@ if (str_starts_with($this->text, "/start ")) {
             'curl_error' => $curlError
         ];
     }
+
     public function answerCallbackQuery(string $text = null, bool $showAlert = false): void
     {
 
@@ -863,7 +842,8 @@ if (str_starts_with($this->text, "/start ")) {
         $parts = explode('-', $date);
         return checkdate($parts[1], $parts[2], $parts[0]);
     }
-        public function handleInlineQuery($inlineQuery): void
+
+    public function handleInlineQuery($inlineQuery): void
     {
         $inlineQueryId = $inlineQuery['id'];
         $queryText = trim($inlineQuery['query']);
@@ -883,17 +863,17 @@ if (str_starts_with($this->text, "/start ")) {
 
                 $results[] = [
                     'type' => 'article',
-                    'id' => uniqid(), 
+                    'id' => uniqid(),
                     'title' => htmlspecialchars($customer['name']),
                     'description' => $descriptionPreview,
                     'input_message_content' => [
                         'message_text' => "📋 **اطلاعات مشتری:**\n\n" .
-                                          "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
-                                          "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
-                                          "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
-                                          "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
-                                          "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
-                                          "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد'),
+                            "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
+                            "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
+                            "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
+                            "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
+                            "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
+                            "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد'),
                         'parse_mode' => 'HTML'
                     ],
                     'reply_markup' => [
@@ -901,7 +881,7 @@ if (str_starts_with($this->text, "/start ")) {
                             [['text' => 'مشاهده جزئیات کامل', 'url' => 'https://t.me/Atefetest_bot?start=show_customer_details_' . $customer['id']]]
                         ]
                     ],
-               ];
+                ];
             }
         } else {
             $results[] = [
@@ -926,45 +906,44 @@ if (str_starts_with($this->text, "/start ")) {
             'cache_time' => 0 // برای نمایش نتایج زنده، کش را کم کنید
         ]);
     }
-    public function searchUrl($customerId)
+
+    public function searchUrl($chatId,$customerId)
     {
-            error_log("INFO: User " . $chatId . " requested customer details for ID: " . $customerId);
-            $url = 'https://t.me/Atefetest_bot?start=show_customer_details_' . $customerId;
-            $response = file_get_contents($url);
-            $customer = json_decode($response, true);
-            $customer = $this->db->getCustomersbyId($customerId);
+        error_log("INFO: User " . $chatId . " requested customer details for ID: " . $customerId);
+        $url = 'https://t.me/Atefetest_bot?start=show_customer_details_' . $customerId;
+        $response = file_get_contents($url);
+        $customer = json_decode($response, true);
+        $customer = $this->db->getCustomersbyId($customerId);
 
-            if ($customer) {
-                $text = "📋 <b>اطلاعات مشتری:</b>\n\n" .
-                        "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
-                        "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
-                        "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
-                        "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
-                        "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
-                        "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
-                
-                $keyboard = [
-                    [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
-                    [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
-                ];
+        if ($customer) {
+            $text = "📋 <b>اطلاعات مشتری:</b>\n\n" .
+                "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
+                "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
+                "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
+                "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
+                "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
+                "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
 
-                $this->sendRequest("editMessageText", [
-                    "chat_id" => $chatId,
-                    "message_id" => $messageId,
-                    "text" => $text,
-                    "parse_mode" => "HTML",
-                    "reply_markup" => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
-                ]);
-            } else {
-                $this->sendRequest("editMessageText", [
-                    "chat_id" => $chatId,
-                    "message_id" => $messageId,
-                    "text" => "❌ مشتری مورد نظر یافت نشد.",
-                    "reply_markup" => json_encode(['inline_keyboard' => [[['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]]])
-                ]);
-            }
-            $this->answerCallbackQuery();
-            return;
+            $keyboard = [
+                [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
+                [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
+            ];
+
+            $this->sendRequest("sendMessage", [
+                "chat_id" => $chatId,
+                "text" => $text,
+                "parse_mode" => "HTML",
+                "reply_markup" => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE)
+            ]);
+        } else {
+            $this->sendRequest("sendMessage", [
+                "chat_id" => $chatId,
+                "text" => "❌ مشتری مورد نظر یافت نشد.",
+                "reply_markup" => json_encode(['inline_keyboard' => [[['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]]])
+            ]);
+        }
+        $this->answerCallbackQuery();
+        return;
     }
 
 }
