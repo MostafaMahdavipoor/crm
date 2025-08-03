@@ -319,11 +319,11 @@ class BotHandler
             $customer = $this->db->getCustomersbyId($customerId);
 
             if ($customer) {
-                $text = "📋 <b>اطلاعات مشتری:</b>\n\n" .
-                $text .= "نام: " . ($customer['name'] ?? 'N/A') . "\n";
-                $text .= "شماره تماس: " . ($customer['phone'] ?? 'N/A') . "\n";
-                $text .= "ایمیل کاربر: " . ($customer['email'] ?? 'N/A') . "\n";
-                $text .= "وضعیت مشتری: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n";
+                $text = "📋 <b>اطلاعات مشتری:</b>\n\n" ;
+                $text .= "نام: " . ($customer['name'] ?? 'N/A') . "\n".
+                $text .= "شماره تماس: " . ($customer['phone'] ?? 'N/A') . "\n".
+                $text .= "ایمیل کاربر: " . ($customer['email'] ?? 'N/A') . "\n".
+                $text .= "وضعیت مشتری: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n".
                 $text .= "یادداشت: " . ($customer['note'] ?? 'ندارد') . "\n";
             } else {
                 $text = "❗️ مشتری پیدا نشد.";
@@ -761,6 +761,13 @@ class BotHandler
                 "\n<blockquote dir='rtl'>وضعیت: $statusCustomer</blockquote>" .
                 "لطفاً یادداشت یا توضیحات کافی برای مشتری را وارد کنید:\n" .
                 "این یادداشت می‌تواند شامل اطلاعات اضافی یا نکات مهم باشد.";
+           $keyboard = [
+               [['text' => '✉️ رد کردن مرحله یادداشت', 'callback_data' => 'skip_note']],
+               [
+                   ['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
+                   ['text' => '🔙 بازگشت', 'callback_data' => 'back_status']
+               ]
+           ];
             $reply_markup = [
                 'inline_keyboard' => $keyboard
             ];
