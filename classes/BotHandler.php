@@ -91,7 +91,15 @@ class BotHandler
                     "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
                     "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
                     "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
-
+        
+            $keyboard = [
+                [['text' => '📜 افزودن یادداشت', 'callback_data' => 'add_note_' . $customerId]],
+                [['text' => 'افزودن زمان پیگیری', 'callback_data' => 'add_follow_up_' . $customerId]],
+                [['text' => '📝 ویرایش اطلاعات مشتری', 'callback_data' => 'edit_customer_' . $customerId]],
+                [['text' => '❌ حذف مشتری', 'callback_data' => 'delete_customer_' . $customerId]],
+                [['text' => '🔍 جستجوی مشتری جدید', 'switch_inline_query_current_chat' => '']],
+                [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']]
+            ];
                 $keyboard = [
                     [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
                     [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
@@ -311,7 +319,7 @@ class BotHandler
             $customer = $this->db->getCustomersbyId($customerId);
 
             if ($customer) {
-                $text = "📋 اطلاعات مشتری:\n";
+                $text = "📋 <b>اطلاعات مشتری:</b>\n\n" .
                 $text .= "نام: " . ($customer['name'] ?? 'N/A') . "\n";
                 $text .= "شماره تماس: " . ($customer['phone'] ?? 'N/A') . "\n";
                 $text .= "ایمیل کاربر: " . ($customer['email'] ?? 'N/A') . "\n";
@@ -321,14 +329,16 @@ class BotHandler
                 $text = "❗️ مشتری پیدا نشد.";
             }
 
-            $keyboard = [];
-            $keyboard[] = [
-                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
+            $keyboard = [
+                [['text' => '📜 افزودن یادداشت', 'callback_data' => 'add_note_' . $customerId]],
+                [['text' => 'افزودن زمان پیگیری', 'callback_data' => 'add_follow_up_' . $customerId]],
+                [['text' => '📝 ویرایش اطلاعات مشتری', 'callback_data' => 'edit_customer_' . $customerId]],
+                [['text' => '❌ حذف مشتری', 'callback_data' => 'delete_customer_' . $customerId]],
+                [['text' => '🔍 جستجوی مشتری جدید', 'switch_inline_query_current_chat' => '']],
+                [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']]
             ];
             $keyboard[] = [
-                ['text' => '🔙 بازگشت به لیست مشتریان', 'callback_data' => 'list_customers_page_1']
-            ];
-            $keyboard[] = [
+                ['text' => '🔙 بازگشت به لیست مشتریان', 'callback_data' => 'list_customers_page_1'],
                 ['text' => '❌ لغو و بازگشت به منو', 'callback_data' => 'cancel']
             ];
 
@@ -923,7 +933,15 @@ class BotHandler
                 "وضعیت: " . $this->getStatusText($customer['status'] ?? 'N/A') . "\n" .
                 "تاریخ ثبت: " . (isset($customer['created_at']) ? jdf::jdate('Y/m/d', strtotime($customer['created_at'])) : 'N/A') . "\n" .
                 "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
-
+       
+            $keyboard = [
+                [['text' => '📜 افزودن یادداشت', 'callback_data' => 'add_note_' . $customerId]],
+                [['text' => 'افزودن زمان پیگیری', 'callback_data' => 'add_follow_up_' . $customerId]],
+                [['text' => '📝 ویرایش اطلاعات مشتری', 'callback_data' => 'edit_customer_' . $customerId]],
+                [['text' => '❌ حذف مشتری', 'callback_data' => 'delete_customer_' . $customerId]],
+                [['text' => '🔍 جستجوی مشتری جدید', 'switch_inline_query_current_chat' => '']],
+                [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']]
+            ];
             $keyboard = [
                 [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
                 [['text' => '🔙 بازگشت به منو اصلی', 'callback_data' => 'cancel']]
