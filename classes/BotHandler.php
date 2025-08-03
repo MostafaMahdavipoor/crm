@@ -551,7 +551,6 @@ class BotHandler
             $keyboard = [
                 [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']],
                 [['text' => '📋 لیست مشتری‌ها', 'callback_data' => 'list_customers_page_1']],
-                [['text' => '↩️ برگشت به مرحله نام', 'callback_data' => 'back_name']],
                 [['text' => '🔙 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
             ];
 
@@ -584,8 +583,8 @@ class BotHandler
                 [['text' => '❄️ سرد', 'callback_data' => 'cold']],
                 [['text' => '🔄 در حال پیگیری', 'callback_data' => 'in_progress']],
                 [['text' => '💼 مشتری بالفعل', 'callback_data' => 'active_customer']],
-                [['text' => '🔙 بازگشت', 'callback_data' => 'back_email']],
-                [['text' => '📝 کنسل', 'callback_data' => 'cancel']],
+                [['text' => '🔙 بازگشت به مرحله ایمیل', 'callback_data' => 'back_email']],
+                [['text' => '📝 لغو و بازگشت به منو', 'callback_data' => 'cancel']],
             ];
 
             $reply_markup = [
@@ -716,6 +715,11 @@ class BotHandler
             $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
             $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status");
 
+            $name = $this->fileHandler->getNameCustomer($this->chatId);
+            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $emailCustomer = "رد شد";
+            $statusCustomer = "رد شد";
+
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
                 "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
                 "\n<blockquote dir='rtl'>ایمیل: $emailCustomer</blockquote>" .
@@ -745,16 +749,14 @@ class BotHandler
         
         }
        if ($state == 'waiting_customer_creation_status') {
-            $statusCustomer = $this->text;
+            $statusCustomer = $this->chatId;
             $emailCustomer = $this->fileHandler->getEmailCustomer($this->chatId);
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
             $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
             $messageId = $this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
-            $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
+            $this->fileHandler->saveEmailCustomer($this->chatId, $statusCustomer);
             $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_note");
-            
-            error_log("Customer Creation Status - ChatID: $this->chatId, Name: $nameCustomer, Phone: $numberCustomer, Email: $emailCustomer, Status: $statusCustomer");
 
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
                 "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
