@@ -743,8 +743,9 @@ class BotHandler
                 'parse_mode' => 'HTML'
             ]);
             return;
+        
         }
-if ($state == 'witting_customer_creation_status') {
+       if ($state == 'waiting_customer_creation_status') {
             $emailCustomer = $this->text;
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
             $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
