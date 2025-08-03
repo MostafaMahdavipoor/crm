@@ -597,7 +597,39 @@ class BotHandler
                 'parse_mode' => 'HTML'
             ]);
         }
+        elseif (str_starts_with($callbackData, 'skip_status')) {
+            $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
+            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $emailCustomer = "رد شد";
+            $statusCustomer = "رد شد (بدون انتخاب)";
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
+            $this->fileHandler->saveStatusCustomer($this->chatId, $statusCustomer);
+            $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_note");
 
+            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
+                "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
+                "\n<blockquote dir='rtl'>ایمیل: $emailCustomer</blockquote>" .
+                "\n<blockquote dir='rtl'>وضعیت: $statusCustomer</blockquote>" .
+                "لطفاً یادداشت یا توضیحات کافی برای مشتری را وارد کنید:\n" .
+                "این یادداشت می‌تواند شامل اطلاعات اضافی یا نکات مهم باشد.";
+           $keyboard = [
+               [['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
+                ['text' => '🔙 بازگشت', 'callback_data' => 'back_status']]
+           ];
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'HTML'
+            ]);
+            return;
+        }
     }
 
     private function getStatusText($status): string
@@ -612,6 +644,7 @@ class BotHandler
             default:
                 return 'وضعیت نامشخص';
         }
+        
     }
 
 
@@ -746,22 +779,23 @@ class BotHandler
             return;
         
         }
-       if ($state == 'waiting_customer_creation_status') {
-            $statusCustomer = $this->fileHandler->getStatusCustomer($this->chatId);
+       elseif($state == 'waiting_customer_creation_status') {
+            $statusCustomer = $this->text;
             $emailCustomer = $this->fileHandler->getEmailCustomer($this->chatId);
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
             $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
             $messageId = $this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
-            $this->fileHandler->saveEmailCustomer($this->chatId, $statusCustomer);
+            $this->fileHandler->saveStatusCustomer($this->chatId, $statusCustomer);
             $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_note");
 
-            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
-                "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
-                "\n<blockquote dir='rtl'>ایمیل: $emailCustomer</blockquote>" .
-                "\n<blockquote dir='rtl'>وضعیت: $statusCustomer</blockquote>" .
-                "لطفاً یادداشت یا توضیحات کافی برای مشتری را وارد کنید:\n" .
-                "این یادداشت می‌تواند شامل اطلاعات اضافی یا نکات مهم باشد.";
+            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>\n" .
+                    "<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>\n" .
+                    "<blockquote dir='rtl'>ایمیل: $emailCustomer</blockquote>\n" .
+                    "<blockquote dir='rtl'>وضعیت: $statusCustomer</blockquote>\n\n" .
+                    "📝 لطفاً یادداشت یا توضیحات لازم برای مشتری را وارد کنید:\n" .
+                    "این یادداشت می‌تواند شامل اطلاعات اضافی یا نکات مهم باشد.";
+
            $keyboard = [
                [['text' => '🚫 کنسل', 'callback_data' => 'cancel'],
                 ['text' => '🔙 بازگشت', 'callback_data' => 'back_status']]
