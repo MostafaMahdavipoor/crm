@@ -530,13 +530,11 @@ class BotHandler
         } elseif (str_starts_with($callbackData, 'cold') || str_starts_with($callbackData, 'in_progress') || str_starts_with($callbackData, 'active_customer')) {
             $statusCustomer = $callbackData;
             $this->fileHandler->saveStatusCustomer($this->chatId, $statusCustomer);
-
+            $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_note");     
             $name = $this->fileHandler->getNameCustomer($this->chatId);
             $number = $this->fileHandler->getPhoneCustomer($this->chatId);
             $email = $this->fileHandler->getEmailCustomer($this->chatId);
-            $note = $this->fileHandler->getNoteCustomer($this->chatId);
-
-            $emailToSave = ($email === 'skipped_email') ? '' : $email;
+            $statusText = $this->getStatusText($statusCustomer);
 
             $result = $this->db->insertCustomer($this->chatId, $name, $number, $emailToSave, $statusCustomer, $note);
 
