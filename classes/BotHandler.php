@@ -744,6 +744,34 @@ class BotHandler
             ]);
             return;
         }
+if ($state == 'witting_customer_creation_note') {
+            $emailCustomer = $this->text;
+            $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
+            $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
+            $messageId = $this->fileHandler->getMessageId($this->chatId);
+            $this->deleteMessageWithDelay();
+            $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
+            $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status");
+
+            $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
+                "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
+                "\n<blockquote dir='rtl'>ایمیل: $emailCustomer</blockquote>" .
+                "\n<blockquote dir='rtl'>وضعیت: $statusCustomer</blockquote>" .
+                "لطفاً یادداشت یا توضیحات کافی برای مشتری را وارد کنید:\n" .
+                "این یادداشت می‌تواند شامل اطلاعات اضافی یا نکات مهم باشد.";
+            $reply_markup = [
+                'inline_keyboard' => $keyboard
+            ];
+
+            $this->sendRequest('editMessageText', [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'message_id' => $messageId,
+                'reply_markup' => json_encode($reply_markup, JSON_UNESCAPED_UNICODE),
+                'parse_mode' => 'HTML'
+            ]);
+            return;
+        }
 
 
     }
