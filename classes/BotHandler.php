@@ -341,9 +341,8 @@ class BotHandler
                 ['text' => '❌ لغو و بازگشت به منو', 'callback_data' => 'cancel']
             ];
 
-            $this->sendRequest('editMessageText', [
+            $this->sendRequest('sendMessage', [
                 'chat_id' => $chatId,
-                'message_id' => $messageId,
                 'text' => $text,
                 'reply_markup' => json_encode(['inline_keyboard' => $keyboard], JSON_UNESCAPED_UNICODE),
                 'parse_mode' => 'HTML'
