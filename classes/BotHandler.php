@@ -753,6 +753,8 @@ class BotHandler
             $this->deleteMessageWithDelay();
             $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
             $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_note");
+            
+            error_log("Customer Creation Status - ChatID: $this->chatId, Name: $nameCustomer, Phone: $numberCustomer, Email: $emailCustomer, Status: $statusCustomer");
 
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
                 "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
