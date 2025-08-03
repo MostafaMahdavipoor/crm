@@ -93,12 +93,12 @@ class BotHandler
                     "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
         
             $keyboard = [
-                [['text' => '📜 افزودن یادداشت', 'callback_data' => 'add_note_' . $customerId]],
-                [['text' => 'افزودن زمان پیگیری', 'callback_data' => 'add_follow_up_' . $customerId]],
-                [['text' => '📝 ویرایش اطلاعات مشتری', 'callback_data' => 'edit_customer_' . $customerId]],
-                [['text' => '❌ حذف مشتری', 'callback_data' => 'delete_customer_' . $customerId]],
-                [['text' => '🔍 جستجوی مشتری جدید', 'switch_inline_query_current_chat' => '']],
-                [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']]
+                ['text' => '📜 افزودن یادداشت', 'callback_data' => 'add_note_' . $customerId],
+                ['text' => '⏲ افزودن زمان پیگیری', 'callback_data' => 'add_follow_up_' . $customerId],
+                ['text' => '📝 ویرایش اطلاعات مشتری', 'callback_data' => 'edit_customer_' . $customerId],
+                ['text' => '❌ حذف مشتری', 'callback_data' => 'delete_customer_' . $customerId],
+                ['text' => '🔍 جستجوی مشتری جدید', 'switch_inline_query_current_chat' => ''],
+                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
             ];
                 $keyboard = [
                     [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
@@ -330,12 +330,12 @@ class BotHandler
             }
 
             $keyboard = [
-                [['text' => '📜 افزودن یادداشت', 'callback_data' => 'add_note_' . $customerId]],
-                [['text' => 'افزودن زمان پیگیری', 'callback_data' => 'add_follow_up_' . $customerId]],
-                [['text' => '📝 ویرایش اطلاعات مشتری', 'callback_data' => 'edit_customer_' . $customerId]],
-                [['text' => '❌ حذف مشتری', 'callback_data' => 'delete_customer_' . $customerId]],
-                [['text' => '🔍 جستجوی مشتری جدید', 'switch_inline_query_current_chat' => '']],
-                [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']]
+                ['text' => '📜 افزودن یادداشت', 'callback_data' => 'add_note_' . $customerId],
+                ['text' => '⏲ افزودن زمان پیگیری', 'callback_data' => 'add_follow_up_' . $customerId],
+                ['text' => '📝 ویرایش اطلاعات مشتری', 'callback_data' => 'edit_customer_' . $customerId],
+                ['text' => '❌ حذف مشتری', 'callback_data' => 'delete_customer_' . $customerId],
+                ['text' => '🔍 جستجوی مشتری جدید', 'switch_inline_query_current_chat' => ''],
+                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
             ];
             $keyboard[] = [
                 ['text' => '🔙 بازگشت به لیست مشتریان', 'callback_data' => 'list_customers_page_1'],
@@ -935,12 +935,12 @@ class BotHandler
                 "یادداشت: " . htmlspecialchars($customer['note'] ?? 'ندارد');
        
             $keyboard = [
-                [['text' => '📜 افزودن یادداشت', 'callback_data' => 'add_note_' . $customerId]],
-                [['text' => 'افزودن زمان پیگیری', 'callback_data' => 'add_follow_up_' . $customerId]],
-                [['text' => '📝 ویرایش اطلاعات مشتری', 'callback_data' => 'edit_customer_' . $customerId]],
-                [['text' => '❌ حذف مشتری', 'callback_data' => 'delete_customer_' . $customerId]],
-                [['text' => '🔍 جستجوی مشتری جدید', 'switch_inline_query_current_chat' => '']],
-                [['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']]
+                ['text' => '📜 افزودن یادداشت', 'callback_data' => 'add_note_' . $customerId],
+                ['text' => '⏲ افزودن زمان پیگیری', 'callback_data' => 'add_follow_up_' . $customerId],
+                ['text' => '📝 ویرایش اطلاعات مشتری', 'callback_data' => 'edit_customer_' . $customerId],
+                ['text' => '❌ حذف مشتری', 'callback_data' => 'delete_customer_' . $customerId],
+                ['text' => '🔍 جستجوی مشتری جدید', 'switch_inline_query_current_chat' => ''],
+                ['text' => '📝 ثبت مشتری جدید', 'callback_data' => 'customer_creation']
             ];
             $keyboard = [
                 [['text' => '🔍 جستجوی جدید مشتری', 'switch_inline_query_current_chat' => '']], // دکمه برای شروع جستجوی اینلاین جدید
