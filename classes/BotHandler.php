@@ -867,7 +867,7 @@ class BotHandler
                     'title' => htmlspecialchars($customer['name']),
                     'description' => $descriptionPreview,
                     'input_message_content' => [
-                        'message_text' => "📋 **اطلاعات مشتری:**\n\n" .
+                        'message_text' => "📋 <b>اطلاعات مشتری:</b>\n\n" .
                             "نام: " . htmlspecialchars($customer['name'] ?? 'N/A') . "\n" .
                             "شماره تماس: " . htmlspecialchars($customer['phone'] ?? 'N/A') . "\n" .
                             "ایمیل: " . htmlspecialchars($customer['email'] ?? 'N/A') . "\n" .
