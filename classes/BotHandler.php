@@ -746,7 +746,8 @@ class BotHandler
         
         }
        if ($state == 'waiting_customer_creation_status') {
-            $emailCustomer = $this->text;
+            $statusCustomer = $this->text;
+            $emailCustomer = $this->fileHandler->getEmailCustomer($this->chatId);
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
             $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
             $messageId = $this->fileHandler->getMessageId($this->chatId);
