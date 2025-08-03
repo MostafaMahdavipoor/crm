@@ -744,14 +744,14 @@ class BotHandler
             ]);
             return;
         }
-if ($state == 'witting_customer_creation_note') {
+if ($state == 'witting_customer_creation_status') {
             $emailCustomer = $this->text;
             $nameCustomer = $this->fileHandler->getNameCustomer($this->chatId);
             $numberCustomer = $this->fileHandler->getPhoneCustomer($this->chatId);
             $messageId = $this->fileHandler->getMessageId($this->chatId);
             $this->deleteMessageWithDelay();
             $this->fileHandler->saveEmailCustomer($this->chatId, $emailCustomer);
-            $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_status");
+            $this->fileHandler->saveState($this->chatId, "waiting_customer_creation_note");
 
             $text = "<blockquote dir='rtl'>نام مشتری : $nameCustomer</blockquote>" .
                 "\n<blockquote dir='rtl'>شماره تماس: $numberCustomer</blockquote>" .
